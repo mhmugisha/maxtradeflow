@@ -46,14 +46,14 @@ export default function Home() {
             AI-Powered Market Analysis
           </h1>
           <p className="text-xl md:text-2xl text-[#3a6070] mb-8">
-            Updated Every Hour. Real signals. Real data. No opinion.
+            Real signals from Smart Asset Bot. Live screener across 15 instruments. No opinion — just data.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="bg-[#60c8d4] text-[#080d14] px-8 py-3 rounded-lg font-semibold hover:bg-[#4da8b3] transition-colors">
-              Explore Markets
+              View Screener
             </button>
             <button className="border border-[#60c8d4] text-[#60c8d4] px-8 py-3 rounded-lg font-semibold hover:bg-[#60c8d4] hover:text-[#080d14] transition-colors">
-              View Latest Analysis
+              Live Bot Signals
             </button>
           </div>
         </div>
