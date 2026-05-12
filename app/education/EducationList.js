@@ -12,9 +12,8 @@ function calculateReadTime(content) {
 
 const CATEGORIES = {
   all: 'All',
-  education: 'Education',
-  guide: 'Tool Guides',
-  overview: 'How It Works',
+  beginner: 'Beginner',
+  advanced: 'Advanced',
 };
 
 function ArticleCard({ article }) {
@@ -34,17 +33,17 @@ function ArticleCard({ article }) {
   );
 }
 
-export default function EducationList({ articles }) {
+export default function EducationList({ articles, categoryFilter, tabFilter = false }) {
   const [filteredArticles, setFilteredArticles] = useState(articles);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const handleFilterChange = (category) => {
-    setActiveFilter(category);
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
 
-    if (category === 'all') {
+    if (filter === 'all') {
       setFilteredArticles(articles);
     } else {
-      setFilteredArticles(articles.filter((article) => article.category === category));
+      setFilteredArticles(articles.filter((article) => article.subcategory === filter));
     }
   };
 

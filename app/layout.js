@@ -82,6 +82,17 @@ function ToolsDropdown() {
   );
 }
 
+function EducationDropdown() {
+  return (
+    <div className="education-dropdown hidden absolute top-full left-0 bg-[#111e2e] border border-[#1a2e42] rounded-lg py-3 z-100 w-48">
+      <div className="px-4">
+        <Link href="/education" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-2">Education</Link>
+        <Link href="/guides" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-2">Guides</Link>
+      </div>
+    </div>
+  );
+}
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
@@ -107,7 +118,10 @@ export default function RootLayout({ children }) {
                 <ToolsDropdown />
               </div>
               <span className="text-[#3a6070]">·</span>
-              <Link href="#" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Education</Link>
+              <div className="relative education-dropdown-container">
+                <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Learning</button>
+                <EducationDropdown />
+              </div>
             </div>
             <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors font-medium">
               Sign in
