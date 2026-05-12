@@ -33,7 +33,7 @@ function SessionBar() {
   };
 
   return (
-    <div className="session-bar fixed top-12 left-0 right-0 z-40 bg-[#111e2e] border-b border-[#1a2e42] px-4 py-2">
+    <div style={{ position: 'sticky', top: '56px', zIndex: 99, backgroundColor: '#111e2e', borderBottom: '1px solid #1a2e42', padding: '8px 16px' }}>
       <div className="max-w-7xl mx-auto flex justify-center gap-8">
         {sessions.map((session) => {
           const status = getSessionStatus(session.timezone);
@@ -115,7 +115,7 @@ export default function RootLayout({ children }) {
           </div>
         </nav>
         <SessionBar />
-        <main className="flex-1 pt-[104px]">
+        <main style={{ flex: 1, paddingTop: '92px' }}>
           {children}
         </main>
       </body>
