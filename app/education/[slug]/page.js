@@ -92,32 +92,8 @@ export default async function EducationPage({ params }) {
             <section className="rounded-[32px] border border-slate-800 bg-slate-950/80 p-8">
               <div 
                 dangerouslySetInnerHTML={{ __html: article.content }}
-                style={{
-                  fontSize: '15px',
-                  lineHeight: '1.8',
-                  color: '#8aa0b0'
-                }}
+                className="article-content"
               />
-              <style jsx>{`
-                h2 {
-                  font-size: 20px;
-                  color: #c8dce8;
-                  margin: 24px 0 12px;
-                }
-                p {
-                  font-size: 15px;
-                  line-height: 1.8;
-                  color: #8aa0b0;
-                  margin-bottom: 16px;
-                }
-                strong {
-                  color: #c8dce8;
-                }
-                ul, li {
-                  color: #8aa0b0;
-                  line-height: 1.8;
-                }
-              `}</style>
             </section>
           </main>
 
