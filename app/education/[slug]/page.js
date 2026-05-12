@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
   getArticleBySlug,
@@ -36,39 +34,38 @@ function TableOfContents({ headings }) {
   );
 }
 
-export default function EducationPage({ params }) {
+export async function generateMetadata({ params }) {
   const { slug } = params;
-  const [article, setArticle] = useState(null);
-  const [headings, setHeadings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const articleData = await getArticleBySlug(slug);
-        if (articleData) {
-          setArticle(articleData);
-          const extractedHeadings = extractHeadingsFromHTML(articleData.content);
-          setHeadings(extractedHeadings);
-        }
-      } catch (error) {
-        console.error('Error fetching article:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [slug]);
-
-  if (loading) {
-    return <div className={styles.container}>Loading...</div>;
-  }
+  const article = await getArticleBySlug(slug);
 
   if (!article) {
-    return <div className={styles.container}>Article not found</div>;
+    return {
+      title: 'Education Article Not Found',
+      description: 'The education article you are looking for does not exist.',
+    };
   }
 
+  return {
+    title: article.seo_title || article.title,
+    description: article.seo_description || article.excerpt || article.title,
+    keywords: article.tags?.join(', '),
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      type: 'article',
+    },
+  };
+}
+
+export default async function EducationPage({ params }) {
+  const { slug } = params;
+  const article = await getArticleBySlug(slug);
+
+  if (!article) {
+    notFound();
+  }
+
+  const headings = extractHeadingsFromHTML(article.content);
   const readTime = calculateReadTime(article.content);
   const tags = formatTags(article.tags);
 
@@ -170,34 +167,9 @@ export default function EducationPage({ params }) {
           </aside>
         </div>
       </div>
-
-      <style jsx>{`
-        ${styles.toString && styles.toString()}
-      `}</style>
     </article>
   );
 }
-
-export async function generateMetadata({ params }) {
-  const { slug } = params;
-
-  try {
-    const article = await getArticleBySlug(slug);
-
-    if (!article) {
-      return {
-        title: 'Education Article Not Found',
-        description: 'The education article you are looking for does not exist.',
-      };
-    }
-
-    return {
-      title: article.seo_title || article.title,
-      description: article.seo_description || article.excerpt || article.title,
-      keywords: article.tags?.join(', '),
-      openGraph: {
-        title: article.title,
-        description: article.excerpt,
         type: 'article',
       },
     };

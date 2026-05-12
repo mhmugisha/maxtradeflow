@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getArticleBySlug, getRelatedArticles, calculateReadTime, formatTags } from '@/lib/articles';
 import styles from './article.module.css';
@@ -24,83 +22,129 @@ function formatDate(dateString) {
   });
 }
 
-export default function ArticlePage({ params }) {
+export async function generateMetadata({ params }) {
   const { slug } = params;
-  const [article, setArticle] = useState(null);
-  const [relatedArticles, setRelatedArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const articleData = await getArticleBySlug(slug);
-        if (articleData) {
-          setArticle(articleData);
-          const related = await getRelatedArticles(articleData.ticker, slug, 3);
-          setRelatedArticles(related);
-        }
-      } catch (error) {
-        console.error('Error fetching article:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [slug]);
-
-  if (loading) {
-    return <div className={styles.container}>Loading...</div>;
-  }
+  const article = await getArticleBySlug(slug);
 
   if (!article) {
-    return <div className={styles.container}>Article not found</div>;
+    return {
+      title: 'Article Not Found',
+    };
   }
 
-  const readTime = calculateReadTime(article.content);
-  const tags = formatTags(article.tags);
+  return {
+    title: article.seo_title || article.title,
+    description: article.seo_description || article.excerpt,
+    openGraph: {
+      title: article.seo_title || article.title,
+      description: article.seo_description || article.excerpt,
+      type: 'article',
+    },
+  };
+}
+
+export default async function ArticlePage({ params }) {
+  const { slug } = params;
+  const article = await getArticleBySlug(slug);
+
+  if (!article) {
+    notFound();
+  }
+
+  const relatedArticles = await getRelatedArticles(article.ticker, slug, 3);
 
   return (
-    <article className={styles.article}>
-      <div className={styles.container}>
-        {/* Breadcrumb */}
-        <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
-          <span>/</span>
-          <Link href={`/articles?category=${article.category}`}>
-            {article.category}
-          </Link>
-          <span>/</span>
-          <span>{article.title}</span>
-        </nav>
-
-        {/* Header Section */}
-        <div className={styles.header}>
-          {article.rating && (
-            <div
-              className={styles.signalBadge}
-              style={{ backgroundColor: getRatingColor(article.rating) }}
-            >
-              {article.rating}
+    <div className={styles.articleContainer}>
+      <article className={styles.article}>
+        <header className={styles.articleHeader}>
+          <div className={styles.articleMeta}>
+            <span className={styles.category}>{article.category}</span>
+            {article.ticker && (
+              <span className={styles.ticker}>{article.ticker}</span>
+            )}
+            {article.rating && (
+              <span
+                className={styles.rating}
+                style={{ backgroundColor: getRatingColor(article.rating) }}
+              >
+                {article.rating}
+              </span>
+            )}
+          </div>
+          <h1 className={styles.articleTitle}>{article.title}</h1>
+          <p className={styles.articleExcerpt}>{article.excerpt}</p>
+          <div className={styles.articleStats}>
+            <span className={styles.date}>{formatDate(article.created_at)}</span>
+            <span className={styles.readTime}>
+              {calculateReadTime(article.content)} min read
+            </span>
+          </div>
+          {article.tags && article.tags.length > 0 && (
+            <div className={styles.tags}>
+              {formatTags(article.tags).map((tag) => (
+                <span key={tag} className={styles.tag}>
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
+        </header>
 
-          <h1 className={styles.title}>{article.title}</h1>
+        <div
+          className={styles.articleContent}
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
 
-          <div className={styles.meta}>
-            <span className={styles.date}>
-              {formatDate(article.created_at)}
-            </span>
-            <span className={styles.author}>Smart Asset Bot</span>
-            <span className={styles.readTime}>{readTime} min read</span>
+        {article.score !== null && article.score !== undefined && (
+          <div className={styles.signalScore}>
+            <h3>Signal Score: {article.score}/10</h3>
+            <div className={styles.scoreBreakdown}>
+              {article.adx !== null && (
+                <div className={styles.scoreItem}>
+                  <span>ADX</span>
+                  <span>{article.adx}</span>
+                </div>
+              )}
+              {article.rsi !== null && (
+                <div className={styles.scoreItem}>
+                  <span>RSI</span>
+                  <span>{article.rsi}</span>
+                </div>
+              )}
+              {article.direction && (
+                <div className={styles.scoreItem}>
+                  <span>Direction</span>
+                  <span>{article.direction}</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </article>
 
-        <div className={styles.mainContent}>
-          {/* Sidebar Left */}
-          <aside className={styles.sidebarLeft}>
-            {article.direction && (
-              <div className={styles.signalCard}>
+      {relatedArticles.length > 0 && (
+        <aside className={styles.relatedArticles}>
+          <h3>Related Articles</h3>
+          <div className={styles.relatedList}>
+            {relatedArticles.map((related) => (
+              <Link
+                key={related.slug}
+                href={`/articles/${related.slug}`}
+                className={styles.relatedItem}
+              >
+                <h4>{related.title}</h4>
+                <p>{related.excerpt}</p>
+                <span className={styles.relatedDate}>
+                  {formatDate(related.created_at)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </aside>
+      )}
+    </div>
+  );
+}
                 <h3>Signal Information</h3>
                 <div className={styles.signalGrid}>
                   <div>
