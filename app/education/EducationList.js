@@ -2,8 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { calculateReadTime } from '@/lib/articles';
 import styles from './education-index.module.css';
+
+function calculateReadTime(content) {
+  if (!content) return 1;
+  const words = content.replace(/<[^>]*>/g, '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
 
 const CATEGORIES = {
   all: 'All',
