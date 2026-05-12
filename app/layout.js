@@ -82,17 +82,6 @@ function ToolsDropdown() {
   );
 }
 
-function EducationDropdown() {
-  return (
-    <div className="education-dropdown hidden absolute top-full left-0 bg-[#111e2e] border border-[#1a2e42] rounded-lg py-3 z-100 w-48">
-      <div className="px-4">
-        <Link href="/education" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-2">Education</Link>
-        <Link href="/guides" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-2">Guides</Link>
-      </div>
-    </div>
-  );
-}
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
@@ -107,21 +96,20 @@ export default function RootLayout({ children }) {
               <span className="text-[#3a6070]">·</span>
               <Link href="/indices" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Indices</Link>
               <span className="text-[#3a6070]">·</span>
-              <span className="text-[#3a6070] px-3 py-2">Commodities</span>
+              <Link href="/commodities" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Commodities</Link>
               <span className="text-[#3a6070]">·</span>
-              <span className="text-[#3a6070] px-3 py-2">Crypto</span>
+              <Link href="/crypto" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Crypto</Link>
               <span className="text-[#3a6070]">·</span>
-              <span className="text-[#3a6070] px-3 py-2">Stocks</span>
+              <Link href="/stocks" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Stocks</Link>
               <span className="text-[#1a2e42] px-2">|</span>
               <div className="relative tools-dropdown-container">
                 <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Tools</button>
                 <ToolsDropdown />
               </div>
               <span className="text-[#3a6070]">·</span>
-              <div className="relative education-dropdown-container">
-                <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Learning</button>
-                <EducationDropdown />
-              </div>
+              <Link href="/education" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Education</Link>
+              <span className="text-[#3a6070]">·</span>
+              <Link href="/guides" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Guides</Link>
             </div>
             <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors font-medium">
               Sign in
