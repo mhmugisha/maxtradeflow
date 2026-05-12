@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createArticle } from '../../../lib/articles';
-import { getRecentArticles } from '../../../lib/articles';
+import { neon } from '@neondatabase/serverless';
+
+function getDb() {
+  return neon(process.env.NEON_DATABASE_URL);
+}
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -15,9 +18,14 @@ export async function POST(request) {
     const body = await request.json();
     const { date, top_setups, market_summary } = body;
 
-    const recentSignals = await getRecentArticles(10);
+    const sql = getDb();
+    const recentSignals = await sql`
+      SELECT ticker, direction, score, adx FROM articles 
+      WHERE category = 'signal' AND published = true 
+      ORDER BY created_at DESC LIMIT 10
+    `;
+
     const signalSummary = recentSignals
-      .filter(a => a.category === 'signal')
       .map(a => `${a.ticker} ${a.direction} score=${a.score} adx=${a.adx}`)
       .join(', ');
 
