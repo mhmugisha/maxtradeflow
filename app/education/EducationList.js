@@ -12,8 +12,8 @@ function calculateReadTime(content) {
 
 const CATEGORIES = {
   all: 'All',
-  beginner: 'Beginner',
-  advanced: 'Advanced',
+  education: 'Education',
+  guide: 'Tool Guides',
 };
 
 function ArticleCard({ article }) {
