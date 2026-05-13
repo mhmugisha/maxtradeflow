@@ -3,10 +3,6 @@
 
 import Link from 'next/link'
 
-export const metadata = {
-  title: 'Trading Tools & Calculators | MaxTradeFlow',
-  description: 'Free professional trading calculators — position size, pip value, risk-reward, margin, P&L, compound interest and more.',
-}
 
 const tools = [
   {
