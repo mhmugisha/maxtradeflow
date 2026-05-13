@@ -1,3 +1,4 @@
+'use client'
 // app/tools/page.js
 
 import Link from 'next/link'
