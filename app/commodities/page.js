@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../lib/api';
 
-const COMMODITIES = ['XAU/USD'];
-const COMMODITY_NAMES = { 'XAU/USD': 'Gold / US Dollar' };
+const COMMODITIES = ['XAU/USD', 'XAUUSD'];
+const COMMODITY_NAMES = { 'XAU/USD': 'Gold / US Dollar', 'XAUUSD': 'Gold / US Dollar' };
 
 export default function CommoditiesPage() {
   const [prices, setPrices] = useState([]);
