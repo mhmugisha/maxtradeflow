@@ -74,18 +74,17 @@ export default function ForexSymbolPage({ params }) {
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: info.tv,
-      interval: 'H1',
+      interval: '60',
       timezone: 'Etc/UTC',
       theme: 'dark',
       style: '1',
       locale: 'en',
       backgroundColor: '#0d1520',
-      gridColor: '#1a2535',
       hide_top_toolbar: false,
       hide_legend: false,
       save_image: false,
-      calendar: false,
-      support_host: 'https://www.tradingview.com',
+      height: 500,
+      width: '100%',
     });
     chartRef.current.appendChild(script);
   }, [symbol]);
@@ -184,10 +183,8 @@ export default function ForexSymbolPage({ params }) {
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Chart</div>
               <div style={{ fontSize: '11px', color: '#475569' }}>Powered by TradingView</div>
             </div>
-            <div ref={chartRef} className="tradingview-widget-container" style={{ height: '450px', width: '100%' }}>
-              <div style={{ height: '450px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '13px' }}>
-                Loading chart...
-              </div>
+            <div ref={chartRef} className="tradingview-widget-container" style={{ height: '500px', width: '100%', position: 'relative' }}>
+              <div className="tradingview-widget-container__widget" style={{ height: '100%', width: '100%' }}></div>
             </div>
           </div>
 
