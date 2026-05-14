@@ -187,7 +187,7 @@ export default function ForexPage() {
                           ) : <span style={{ color: '#1a2535' }}>—</span>}
                         </td>
                         <td style={{ padding: '12px' }}>
-                          <Link href={`/articles?ticker=${price.symbol.replace('/', '')}`} style={{ textDecoration: 'none' }}>
+                          <Link href={`/forex/${price.symbol.replace('/', '').toLowerCase()}`} style={{ textDecoration: 'none' }}>
                             <span style={{ fontSize: '11px', color: '#60c8d4', border: '1px solid #1a2535', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                               Analysis →
                             </span>
