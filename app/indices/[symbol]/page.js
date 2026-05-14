@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { fetchPrices, fetchScreener } from '../../../lib/api';
+import { fetchPrices, fetchScreener } from '../../lib/api';
 
 const INDEX_INFO = {
   'us500': { display: 'US500', name: 'S&P 500 Index', tv: 'FOREXCOM:SPXUSD', icon: '🇺🇸', related: ['nas100', 'us30'] },
@@ -100,7 +100,7 @@ export default function IndexSymbolPage({ params }) {
             {price && (
               <div style={{ display: 'flex', gap: '12px' }}>
                 {[
-                  { label: 'Price', value: parseFloat(price.bid).toFixed(2), color: '#e05555' },
+                  { label: 'Price', value: parseFloat(price.bid).toFixed(2), color: '#60c8d4' },
                   { label: 'Spread', value: price.spread, color: '#64748b' },
                 ].map(item => (
                   <div key={item.label} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 20px', textAlign: 'center' }}>
@@ -127,8 +127,8 @@ export default function IndexSymbolPage({ params }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
                 {[
                   { label: 'Direction', value: `${signal.direction === 'LONG' ? '▲' : '▼'} ${signal.direction}`, color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' },
-                  { label: 'ADX', value: signal.adx, color: '#e05555' },
-                  { label: 'RSI', value: signal.rsi, color: '#e05555' },
+                  { label: 'ADX', value: signal.adx, color: '#60c8d4' },
+                  { label: 'RSI', value: signal.rsi, color: '#60c8d4' },
                 ].map(item => (
                   <div key={item.label} style={{ background: '#060b11', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '12px', color: '#475569' }}>{item.label}</span>
