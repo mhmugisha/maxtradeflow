@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../../lib/api';
 import TradingViewChart from '../../../components/TradingViewChart';
+import Skeleton from '../../../components/Skeleton';
 
 const INDEX_INFO = {
   'us500': { display: 'US500', name: 'S&P 500 Index', tv: 'FOREXCOM:SPXUSD', icon: '🇺🇸', related: ['nas100', 'us30'] },
@@ -12,12 +13,42 @@ const INDEX_INFO = {
   'us30': { display: 'US30', name: 'Dow Jones 30', tv: 'FOREXCOM:DJI', icon: '🏭', related: ['us500', 'nas100'] },
 };
 
+function PriceBoxSkeleton({ label }) {
+  return (
+    <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 20px', textAlign: 'center' }}>
+      <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</div>
+      <Skeleton height="26px" style={{ margin: '0 auto', maxWidth: '80px' }} />
+    </div>
+  );
+}
+
+function SignalCardSkeleton() {
+  return (
+    <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <Skeleton width="180px" height="16px" />
+        <Skeleton width="50px" height="22px" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ background: '#060b11', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between' }}>
+            <Skeleton width="50px" height="12px" />
+            <Skeleton width="40px" height="14px" />
+          </div>
+        ))}
+      </div>
+      <Skeleton height="6px" />
+    </div>
+  );
+}
+
 export default function IndexSymbolPage({ params }) {
   const symbol = params.symbol.toLowerCase();
   const info = INDEX_INFO[symbol] || { display: symbol.toUpperCase(), name: symbol.toUpperCase(), tv: symbol.toUpperCase(), icon: '📈', related: [] };
 
   const [price, setPrice] = useState(null);
   const [signal, setSignal] = useState(null);
+  const [signalChecked, setSignalChecked] = useState(false);
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
@@ -29,7 +60,8 @@ export default function IndexSymbolPage({ params }) {
       fetchScreener().then(screener => {
         const s = screener.find(s => s.symbol === info.display);
         if (s) setSignal(s);
-      });
+        setSignalChecked(true);
+      }).catch(() => setSignalChecked(true));
     };
     load();
     const interval = setInterval(load, 5000);
@@ -75,9 +107,9 @@ export default function IndexSymbolPage({ params }) {
                 </span>
               )}
             </div>
-            {price && (
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {[
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {price ? (
+                [
                   { label: 'Price', value: parseFloat(price.bid).toFixed(2), color: '#60c8d4' },
                   { label: 'Spread', value: price.spread, color: '#64748b' },
                 ].map(item => (
@@ -85,16 +117,22 @@ export default function IndexSymbolPage({ params }) {
                     <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{item.label}</div>
                     <div style={{ fontSize: '22px', fontWeight: '700', color: item.color, fontFamily: 'monospace' }}>{item.value}</div>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              ) : (
+                <>
+                  <PriceBoxSkeleton label="Price" />
+                  <PriceBoxSkeleton label="Spread" />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
         <div>
-          {signal && (
+          {!signalChecked && <SignalCardSkeleton />}
+          {signalChecked && signal && (
             <div style={{ background: '#0d1520', border: `1px solid ${rc?.border || '#1a2535'}`, borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#f1f5f9' }}>Live Signal — {info.display}</div>

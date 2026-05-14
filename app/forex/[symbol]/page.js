@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../../lib/api';
 import TradingViewChart from '../../../components/TradingViewChart';
+import Skeleton from '../../../components/Skeleton';
 
 const PAIR_NAMES = {
   'eurusd': { display: 'EUR/USD', name: 'Euro / US Dollar', tv: 'OANDA:EURUSD', related: ['gbpusd', 'eurgbp', 'eurcad'] },
@@ -20,12 +21,48 @@ const PAIR_NAMES = {
   'nzdusd': { display: 'NZD/USD', name: 'Kiwi / US Dollar', tv: 'OANDA:NZDUSD', related: ['audusd', 'audjpy', 'usdcad'] },
 };
 
+// Hero price box skeleton — matches the real box dimensions exactly
+function PriceBoxSkeleton({ label }) {
+  return (
+    <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center' }}>
+      <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</div>
+      <Skeleton height="22px" style={{ margin: '0 auto', maxWidth: '70px' }} />
+    </div>
+  );
+}
+
+// Signal card skeleton — full-card placeholder
+function SignalCardSkeleton() {
+  return (
+    <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <Skeleton width="180px" height="16px" />
+        <Skeleton width="50px" height="22px" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ background: '#060b11', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Skeleton width="50px" height="12px" />
+            <Skeleton width="40px" height="14px" />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569', marginBottom: '6px' }}>
+        <span>Signal Strength</span>
+        <Skeleton width="30px" height="11px" />
+      </div>
+      <Skeleton height="6px" />
+    </div>
+  );
+}
+
 export default function ForexSymbolPage({ params }) {
   const symbol = params.symbol.toLowerCase();
   const info = PAIR_NAMES[symbol] || { display: symbol.toUpperCase(), name: symbol.toUpperCase(), tv: `OANDA:${symbol.toUpperCase()}`, related: [] };
 
   const [price, setPrice] = useState(null);
   const [signal, setSignal] = useState(null);
+  const [signalChecked, setSignalChecked] = useState(false);
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
@@ -37,7 +74,8 @@ export default function ForexSymbolPage({ params }) {
       fetchScreener().then(screener => {
         const s = screener.find(s => s.symbol === info.display);
         if (s) setSignal(s);
-      });
+        setSignalChecked(true);
+      }).catch(() => setSignalChecked(true));
     };
     load();
     const interval = setInterval(load, 5000);
@@ -90,9 +128,9 @@ export default function ForexSymbolPage({ params }) {
                 </span>
               )}
             </div>
-            {price && (
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {[
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {price ? (
+                [
                   { label: 'Bid', value: price.bid, color: '#60c8d4' },
                   { label: 'Ask', value: price.ask, color: '#60c8d4' },
                   { label: 'Spread', value: price.spread, color: '#64748b' },
@@ -101,9 +139,15 @@ export default function ForexSymbolPage({ params }) {
                     <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{item.label}</div>
                     <div style={{ fontSize: '18px', fontWeight: '700', color: item.color, fontFamily: 'monospace' }}>{item.value}</div>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              ) : (
+                <>
+                  <PriceBoxSkeleton label="Bid" />
+                  <PriceBoxSkeleton label="Ask" />
+                  <PriceBoxSkeleton label="Spread" />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -113,8 +157,9 @@ export default function ForexSymbolPage({ params }) {
 
         {/* LEFT */}
         <div>
-          {/* Signal Card */}
-          {signal && (
+          {/* Signal Card — skeleton while loading, real card when signal exists, nothing once we know there's no signal */}
+          {!signalChecked && <SignalCardSkeleton />}
+          {signalChecked && signal && (
             <div style={{ background: '#0d1520', border: `1px solid ${rc?.border || '#1a2535'}`, borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#f1f5f9' }}>Live Signal — {info.display}</div>
