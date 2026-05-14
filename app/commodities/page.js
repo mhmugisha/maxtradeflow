@@ -29,7 +29,7 @@ export default function CommoditiesPage() {
   }, []);
 
   const commodityPrices = prices.filter(p => COMMODITIES.includes(p.symbol));
-  const commodityScreener = screener.filter(s => COMMODITIES.includes(s.symbol));
+  const commodityScreener = screener.filter(s => ['XAU/USD','XAUUSD'].includes(s.symbol));
   const getSignal = (symbol) => commodityScreener.find(s => s.symbol === symbol);
   const tradeSignals = commodityScreener.filter(s => s.action === 'TRADE').length;
 
