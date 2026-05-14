@@ -103,7 +103,7 @@ export default function ForexSymbolPage({ params }) {
 
       {/* Hero */}
       <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '20px 24px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{ fontSize: '12px', color: '#475569', marginBottom: '8px' }}>
             <Link href="/" style={{ color: '#60c8d4', textDecoration: 'none' }}>Home</Link>
             {' › '}
@@ -142,7 +142,7 @@ export default function ForexSymbolPage({ params }) {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
 
         {/* LEFT */}
         <div>
