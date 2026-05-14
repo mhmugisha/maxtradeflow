@@ -158,8 +158,8 @@ export default function ForexPage() {
                           <div style={{ fontWeight: '600', color: '#f1f5f9' }}>{price.symbol}</div>
                           <div style={{ fontSize: '11px', color: '#475569' }}>{PAIR_NAMES[price.symbol]}</div>
                         </td>
-                        <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace', fontWeight: '500' }}>{price.bid}</td>
-                        <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace' }}>{price.ask}</td>
+                        <td style={{ padding: '12px', color: '#e05555', fontFamily: 'monospace', fontWeight: '500' }}>{price.bid}</td>
+                        <td style={{ padding: '12px', color: '#1D9E75', fontFamily: 'monospace' }}>{price.ask}</td>
                         <td style={{ padding: '12px', color: '#475569', fontFamily: 'monospace' }}>{price.spread}</td>
                         {/* ADX column */}
                         <td style={{ padding: '12px' }}>
