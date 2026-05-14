@@ -1,67 +1,37 @@
 'use client';
-// app/commodities/[symbol]/page.js
+// app/commodities/page.js
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../lib/api';
 
-const COMMODITY_INFO = {
-  'xauusd': { display: 'XAU/USD', name: 'Gold / US Dollar', tv: 'OANDA:XAUUSD', icon: '🥇' },
-};
+const COMMODITIES = ['XAU/USD'];
+const COMMODITY_NAMES = { 'XAU/USD': 'Gold / US Dollar' };
 
-export default function CommoditySymbolPage({ params }) {
-  const symbol = params.symbol.toLowerCase();
-  const info = COMMODITY_INFO[symbol] || { display: symbol.toUpperCase(), name: symbol.toUpperCase(), tv: symbol.toUpperCase(), icon: '📦' };
-
-  const [price, setPrice] = useState(null);
-  const [signal, setSignal] = useState(null);
-  const [articles, setArticles] = useState([]);
-  const chartRef = useRef(null);
+export default function CommoditiesPage() {
+  const [prices, setPrices] = useState([]);
+  const [screener, setScreener] = useState([]);
+  const [recentSignals, setRecentSignals] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState('');
 
   useEffect(() => {
     const load = () => {
-      fetchPrices().then(prices => {
-        const p = prices.find(p => p.symbol === info.display || p.symbol === 'XAU/USD');
-        if (p) setPrice(p);
-      });
-      fetchScreener().then(screener => {
-        const s = screener.find(s => s.symbol === info.display || s.symbol === 'XAU/USD');
-        if (s) setSignal(s);
-      });
+      fetchPrices().then(p => { setPrices(p); setLastUpdate(new Date().toLocaleTimeString()); });
+      fetchScreener().then(setScreener);
     };
     load();
     const interval = setInterval(load, 5000);
-    fetch(`/api/articles?category=signal&limit=10`)
+    fetch('/api/articles?category=signal&limit=6')
       .then(r => r.json())
-      .then(d => {
-        const filtered = (d.articles || []).filter(a => ['XAUUSD', 'XAU/USD'].includes(a.ticker));
-        setArticles(filtered);
-      })
+      .then(d => setRecentSignals((d.articles || []).filter(a => ['XAUUSD','XAU/USD'].includes(a.ticker))))
       .catch(() => {});
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, []);
 
-  useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: info.tv,
-      interval: 'H1',
-      timezone: 'Etc/UTC',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      backgroundColor: '#0d1520',
-      gridColor: '#1a2535',
-      hide_top_toolbar: false,
-      save_image: false,
-    });
-    chartRef.current.appendChild(script);
-  }, [symbol]);
+  const commodityPrices = prices.filter(p => COMMODITIES.includes(p.symbol));
+  const commodityScreener = screener.filter(s => COMMODITIES.includes(s.symbol));
+  const getSignal = (symbol) => commodityScreener.find(s => s.symbol === symbol);
+  const tradeSignals = commodityScreener.filter(s => s.action === 'TRADE').length;
 
   const ratingColor = (rating) => {
     if (rating === 'TRADE') return { bg: '#1D9E7520', color: '#1D9E75', border: '#1D9E7540' };
@@ -69,102 +39,112 @@ export default function CommoditySymbolPage({ params }) {
     return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
   };
 
-  const rc = signal ? ratingColor(signal.action) : null;
-
   return (
     <div style={{ background: '#080d14', minHeight: '100vh', color: '#e2e8f0' }}>
-      <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '20px 24px' }}>
+      <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '28px 24px 20px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ fontSize: '12px', color: '#475569', marginBottom: '8px' }}>
-            <Link href="/" style={{ color: '#60c8d4', textDecoration: 'none' }}>Home</Link>
-            {' › '}
-            <Link href="/commodities" style={{ color: '#60c8d4', textDecoration: 'none' }}>Commodities</Link>
-            {' › '}
-            <span>{info.display}</span>
-          </div>
+          <div style={{ fontSize: '11px', color: '#475569', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Live Markets</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ fontSize: '36px' }}>{info.icon}</span>
-              <div>
-                <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 2px' }}>{info.display}</h1>
-                <div style={{ fontSize: '13px', color: '#64748b' }}>{info.name} · Commodity</div>
-              </div>
-              {signal && rc && (
-                <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '6px', padding: '6px 14px', fontSize: '13px', fontWeight: '700' }}>
-                  {signal.action}
-                </span>
-              )}
+            <div>
+              <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 4px' }}>Commodities</h1>
+              <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>Gold (XAU/USD) · Live prices & AI signal scores</p>
             </div>
-            {price && (
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {[
-                  { label: 'Bid', value: `$${parseFloat(price.bid).toFixed(2)}`, color: '#EF9F27' },
-                  { label: 'Ask', value: `$${parseFloat(price.ask).toFixed(2)}`, color: '#EF9F27' },
-                  { label: 'Spread', value: price.spread, color: '#64748b' },
-                ].map(item => (
-                  <div key={item.label} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{item.label}</div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: item.color, fontFamily: 'monospace' }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {[
+                { label: 'Tracked', value: '1', color: '#60c8d4' },
+                { label: 'Active Signals', value: tradeSignals.toString(), color: '#1D9E75' },
+              ].map(card => (
+                <div key={card.label} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', minWidth: '80px' }}>
+                  <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{card.label}</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: card.color }}>{card.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
         <div>
-          {signal && (
-            <div style={{ background: '#0d1520', border: `1px solid ${rc?.border || '#1a2535'}`, borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#f1f5f9' }}>Live Signal — {info.display}</div>
-                <span style={{ background: rc?.bg, color: rc?.color, border: `1px solid ${rc?.border}`, borderRadius: '4px', padding: '4px 12px', fontSize: '12px', fontWeight: '700' }}>
-                  {signal.score}/10
-                </span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
-                {[
-                  { label: 'Direction', value: `${signal.direction === 'LONG' ? '▲' : '▼'} ${signal.direction}`, color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' },
-                  { label: 'ADX', value: signal.adx, color: '#e05555' },
-                  { label: 'RSI', value: signal.rsi, color: '#e05555' },
-                ].map(item => (
-                  <div key={item.label} style={{ background: '#060b11', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '12px', color: '#475569' }}>{item.label}</span>
-                    <span style={{ fontSize: '14px', fontWeight: '600', color: item.color }}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ background: '#1a2535', borderRadius: '4px', height: '6px' }}>
-                <div style={{ height: '6px', borderRadius: '4px', background: signal.score >= 8 ? '#1D9E75' : '#EF9F27', width: `${signal.score * 10}%` }} />
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '24px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Live Prices</div>
+              <div style={{ fontSize: '11px', color: '#475569' }}>
+                {lastUpdate && <span style={{ color: '#1D9E75' }}>● </span>}
+                Updating every 5s {lastUpdate && `· ${lastUpdate}`}
               </div>
             </div>
-          )}
-
-          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' }}>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535', display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Chart</div>
-              <div style={{ fontSize: '11px', color: '#475569' }}>Powered by TradingView</div>
-            </div>
-            <div ref={chartRef} style={{ height: '450px', width: '100%' }}>
-              <div style={{ height: '450px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '13px' }}>Loading chart...</div>
-            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #1a2535' }}>
+                  {['Commodity', 'Bid', 'Ask', 'Spread', 'ADX', 'Score', 'Direction', 'Signal', ''].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', color: '#475569', fontWeight: '400', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {commodityPrices.length > 0 ? commodityPrices.map((price, i) => {
+                  const signal = getSignal(price.symbol);
+                  const rc = signal ? ratingColor(signal.action) : null;
+                  return (
+                    <tr key={i} style={{ borderBottom: '1px solid #0a1020' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '12px' }}>
+                        <div style={{ fontWeight: '600', color: '#f1f5f9' }}>{price.symbol}</div>
+                        <div style={{ fontSize: '11px', color: '#475569' }}>{COMMODITY_NAMES[price.symbol]}</div>
+                      </td>
+                      <td style={{ padding: '12px', color: '#e05555', fontFamily: 'monospace', fontWeight: '500' }}>{price.bid}</td>
+                      <td style={{ padding: '12px', color: '#1D9E75', fontFamily: 'monospace' }}>{price.ask}</td>
+                      <td style={{ padding: '12px', color: '#475569', fontFamily: 'monospace' }}>{price.spread}</td>
+                      <td style={{ padding: '12px' }}>
+                        {signal ? <span style={{ fontSize: '12px', fontWeight: '600', color: parseFloat(signal.adx) >= 25 ? '#1D9E75' : parseFloat(signal.adx) >= 15 ? '#EF9F27' : '#e05555' }}>{signal.adx}</span> : <span style={{ color: '#1a2535' }}>—</span>}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {signal ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', width: '40px' }}>
+                              <div style={{ height: '4px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : signal.score >= 6 ? '#EF9F27' : '#e05555', width: `${signal.score * 10}%` }} />
+                            </div>
+                            <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{signal.score}/10</span>
+                          </div>
+                        ) : <span style={{ color: '#1a2535' }}>—</span>}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {signal ? <span style={{ color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555', fontSize: '12px', fontWeight: '600' }}>{signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}</span> : <span style={{ color: '#1a2535' }}>—</span>}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        {signal && rc ? <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '4px', padding: '3px 8px', fontSize: '10px', fontWeight: '700' }}>{signal.action}</span> : <span style={{ color: '#1a2535' }}>—</span>}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <Link href={`/commodities/${price.symbol.replace('/', '').toLowerCase()}`} style={{ textDecoration: 'none' }}>
+                          <span style={{ fontSize: '11px', color: '#60c8d4', border: '1px solid #1a2535', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Analysis →</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                }) : (
+                  <tr><td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: '#475569' }}>Loading prices...</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Gold Signal History</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Recent Commodity Signals</div>
               <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>All signals →</Link>
             </div>
             <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
-              {articles.length > 0 ? articles.map((article, i) => (
+              {recentSignals.length > 0 ? recentSignals.map((article, i) => (
                 <Link key={i} href={`/articles/${article.slug}`} style={{ textDecoration: 'none' }}>
                   <div style={{ background: '#060b11', border: '1px solid #1a2535', borderRadius: '8px', padding: '14px' }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = '#60c8d4'}
                     onMouseLeave={e => e.currentTarget.style.borderColor = '#1a2535'}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ color: '#EF9F27', fontWeight: '700', fontSize: '13px' }}>XAU/USD</span>
+                      <span style={{ color: '#EF9F27', fontWeight: '700', fontSize: '13px' }}>{article.ticker}</span>
                       <span style={{ background: '#1D9E7520', color: '#1D9E75', border: '1px solid #1D9E7540', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: '700' }}>{article.rating}</span>
                     </div>
                     <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', lineHeight: '1.4' }}>{article.title}</div>
@@ -175,7 +155,7 @@ export default function CommoditySymbolPage({ params }) {
                   </div>
                 </Link>
               )) : (
-                <div style={{ color: '#475569', fontSize: '13px' }}>No Gold signal articles yet.</div>
+                <div style={{ color: '#475569', fontSize: '13px' }}>Commodity signal articles will appear here as the bot fires signals.</div>
               )}
             </div>
           </div>
@@ -188,7 +168,6 @@ export default function CommoditySymbolPage({ params }) {
             </div>
             <div style={{ width: '100%', height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a2535', fontSize: '12px' }}>AdSense 300×250</div>
           </div>
-
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Quick Calculators</div>
@@ -213,7 +192,6 @@ export default function CommoditySymbolPage({ params }) {
               ))}
             </div>
           </div>
-
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
               <span style={{ fontSize: '10px', color: '#1a2535', textTransform: 'uppercase', letterSpacing: '1px' }}>Advertisement</span>
