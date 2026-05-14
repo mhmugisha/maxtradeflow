@@ -27,7 +27,6 @@ export default function ForexSymbolPage({ params }) {
   const [price, setPrice] = useState(null);
   const [signal, setSignal] = useState(null);
   const [articles, setArticles] = useState([]);
-  const [morningOutlook, setMorningOutlook] = useState(null);
 
   useEffect(() => {
     const load = () => {
@@ -52,11 +51,6 @@ export default function ForexSymbolPage({ params }) {
         );
         setArticles(filtered);
       })
-      .catch(() => {});
-
-    fetch(`/api/morning-outlook`)
-      .then(r => r.json())
-      .then(d => setMorningOutlook(d))
       .catch(() => {});
 
     return () => clearInterval(interval);
