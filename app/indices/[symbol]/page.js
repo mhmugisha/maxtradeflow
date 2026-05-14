@@ -1,9 +1,10 @@
 'use client';
 // app/indices/[symbol]/page.js
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../../lib/api';
+import TradingViewChart from '../../../components/TradingViewChart';
 
 const INDEX_INFO = {
   'us500': { display: 'US500', name: 'S&P 500 Index', tv: 'FOREXCOM:SPXUSD', icon: '🇺🇸', related: ['nas100', 'us30'] },
@@ -18,7 +19,6 @@ export default function IndexSymbolPage({ params }) {
   const [price, setPrice] = useState(null);
   const [signal, setSignal] = useState(null);
   const [articles, setArticles] = useState([]);
-  const chartRef = useRef(null);
 
   useEffect(() => {
     const load = () => {
@@ -41,28 +41,6 @@ export default function IndexSymbolPage({ params }) {
       })
       .catch(() => {});
     return () => clearInterval(interval);
-  }, [symbol]);
-
-  useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: info.tv,
-      interval: 'H1',
-      timezone: 'Etc/UTC',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      backgroundColor: '#0d1520',
-      gridColor: '#1a2535',
-      hide_top_toolbar: false,
-      save_image: false,
-    });
-    chartRef.current.appendChild(script);
   }, [symbol]);
 
   const ratingColor = (rating) => {
@@ -147,11 +125,7 @@ export default function IndexSymbolPage({ params }) {
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Chart</div>
               <div style={{ fontSize: '11px', color: '#475569' }}>Powered by TradingView</div>
             </div>
-            <div ref={chartRef} style={{ height: '450px', width: '100%' }}>
-              <div style={{ height: '450px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '13px' }}>
-                Loading chart...
-              </div>
-            </div>
+            <TradingViewChart symbol={info.tv} height={450} interval="H1" />
           </div>
 
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>

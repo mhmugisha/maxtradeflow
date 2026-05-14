@@ -1,9 +1,10 @@
 'use client';
 // app/forex/[symbol]/page.js
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../../lib/api';
+import TradingViewChart from '../../../components/TradingViewChart';
 
 const PAIR_NAMES = {
   'eurusd': { display: 'EUR/USD', name: 'Euro / US Dollar', tv: 'OANDA:EURUSD', related: ['gbpusd', 'eurgbp', 'eurcad'] },
@@ -27,7 +28,6 @@ export default function ForexSymbolPage({ params }) {
   const [signal, setSignal] = useState(null);
   const [articles, setArticles] = useState([]);
   const [morningOutlook, setMorningOutlook] = useState(null);
-  const chartRef = useRef(null);
 
   useEffect(() => {
     const load = () => {
@@ -43,7 +43,6 @@ export default function ForexSymbolPage({ params }) {
     load();
     const interval = setInterval(load, 5000);
 
-    // Fetch articles for this ticker
     fetch(`/api/articles?category=signal&limit=10`)
       .then(r => r.json())
       .then(d => {
@@ -55,38 +54,12 @@ export default function ForexSymbolPage({ params }) {
       })
       .catch(() => {});
 
-    // Fetch morning outlook
     fetch(`/api/morning-outlook`)
       .then(r => r.json())
       .then(d => setMorningOutlook(d))
       .catch(() => {});
 
     return () => clearInterval(interval);
-  }, [symbol]);
-
-  // Load TradingView widget
-  useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: info.tv,
-      interval: '60',
-      timezone: 'Etc/UTC',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      backgroundColor: '#0d1520',
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      height: 500,
-      width: '100%',
-    });
-    chartRef.current.appendChild(script);
   }, [symbol]);
 
   const ratingColor = (rating) => {
@@ -183,9 +156,7 @@ export default function ForexSymbolPage({ params }) {
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Chart</div>
               <div style={{ fontSize: '11px', color: '#475569' }}>Powered by TradingView</div>
             </div>
-            <div ref={chartRef} className="tradingview-widget-container" style={{ height: '500px', width: '100%', position: 'relative' }}>
-              <div className="tradingview-widget-container__widget" style={{ height: '100%', width: '100%' }}></div>
-            </div>
+            <TradingViewChart symbol={info.tv} height={500} interval="60" />
           </div>
 
           {/* Signal Articles */}
@@ -239,7 +210,6 @@ export default function ForexSymbolPage({ params }) {
 
         {/* RIGHT SIDEBAR */}
         <div>
-          {/* AdSense Top */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
               <span style={{ fontSize: '10px', color: '#1a2535', textTransform: 'uppercase', letterSpacing: '1px' }}>Advertisement</span>
@@ -249,7 +219,6 @@ export default function ForexSymbolPage({ params }) {
             </div>
           </div>
 
-          {/* Related Pairs */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Related Pairs</div>
@@ -276,7 +245,6 @@ export default function ForexSymbolPage({ params }) {
             </div>
           </div>
 
-          {/* Quick Calculators */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Quick Calculators</div>
@@ -302,7 +270,6 @@ export default function ForexSymbolPage({ params }) {
             </div>
           </div>
 
-          {/* AdSense Bottom */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
               <span style={{ fontSize: '10px', color: '#1a2535', textTransform: 'uppercase', letterSpacing: '1px' }}>Advertisement</span>

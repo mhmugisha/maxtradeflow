@@ -1,9 +1,10 @@
 'use client';
 // app/crypto/[symbol]/page.js
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../../lib/api';
+import TradingViewChart from '../../../components/TradingViewChart';
 
 const CRYPTO_INFO = {
   'btcusd': { display: 'BTC/USD', name: 'Bitcoin / US Dollar', icon: '₿', color: '#F7931A', decimals: 2, tv: 'BITSTAMP:BTCUSD', related: ['ethusd', 'solusd', 'bnbusd'] },
@@ -22,7 +23,6 @@ export default function CryptoSymbolPage({ params }) {
   const [price, setPrice] = useState(null);
   const [signal, setSignal] = useState(null);
   const [articles, setArticles] = useState([]);
-  const chartRef = useRef(null);
 
   useEffect(() => {
     const load = () => {
@@ -42,29 +42,6 @@ export default function CryptoSymbolPage({ params }) {
       .then(d => setArticles((d.articles || []).filter(a => a.ticker === botSymbol)))
       .catch(() => {});
     return () => clearInterval(interval);
-  }, [symbol]);
-
-  useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.innerHTML = '';
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: info.tv,
-      interval: '60',
-      timezone: 'Etc/UTC',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      backgroundColor: '#0d1520',
-      hide_top_toolbar: false,
-      save_image: false,
-      height: 500,
-      width: '100%',
-    });
-    chartRef.current.appendChild(script);
   }, [symbol]);
 
   const ratingColor = (rating) => {
@@ -121,7 +98,6 @@ export default function CryptoSymbolPage({ params }) {
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
         <div>
-          {/* Signal Card */}
           {signal && (
             <div style={{ background: '#0d1520', border: `1px solid ${rc?.border || '#1a2535'}`, borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -146,18 +122,14 @@ export default function CryptoSymbolPage({ params }) {
             </div>
           )}
 
-          {/* TradingView Chart */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535', display: 'flex', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Chart</div>
               <div style={{ fontSize: '11px', color: '#475569' }}>Powered by TradingView</div>
             </div>
-            <div ref={chartRef} style={{ height: '500px', width: '100%' }}>
-              <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '13px' }}>Loading chart...</div>
-            </div>
+            <TradingViewChart symbol={info.tv} height={500} interval="60" />
           </div>
 
-          {/* Signal History */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>{info.display} Signal History</div>
@@ -188,7 +160,6 @@ export default function CryptoSymbolPage({ params }) {
           </div>
         </div>
 
-        {/* SIDEBAR */}
         <div>
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
