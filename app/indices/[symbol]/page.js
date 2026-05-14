@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { fetchPrices, fetchScreener } from '../../lib/api';
+import { fetchPrices, fetchScreener } from '../../../lib/api';
 
 const INDEX_INFO = {
   'us500': { display: 'US500', name: 'S&P 500 Index', tv: 'FOREXCOM:SPXUSD', icon: '🇺🇸', related: ['nas100', 'us30'] },
