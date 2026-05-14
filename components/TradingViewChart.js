@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function TradingViewChart({ symbol, height = 500, interval = '60' }) {
-  const containerRef = useRef(null);
+  // outerRef = React owns this, never touched by TradingView
+  // innerRef = TradingView's playground, React never touches this
+  const outerRef = useRef(null);
+  const innerRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Watch for the chart container scrolling into view
+  // Watch for the chart scrolling into view
   useEffect(() => {
-    if (!containerRef.current) return;
-
+    if (!outerRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -18,25 +20,25 @@ export default function TradingViewChart({ symbol, height = 500, interval = '60'
           observer.disconnect();
         }
       },
-      { rootMargin: '200px' } // Start loading 200px before chart enters viewport
+      { rootMargin: '200px' }
     );
-
-    observer.observe(containerRef.current);
+    observer.observe(outerRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Inject TradingView script once visible, re-run when symbol changes
+  // Inject TradingView widget into the inner (React-untouched) div
   useEffect(() => {
-    if (!isVisible || !containerRef.current) return;
+    if (!isVisible || !innerRef.current) return;
 
-    const container = containerRef.current;
-    container.innerHTML = '';
+    const inner = innerRef.current;
+    // Safe — innerRef is not part of React's tree, only TradingView lives here
+    inner.innerHTML = '';
 
     const widgetDiv = document.createElement('div');
     widgetDiv.className = 'tradingview-widget-container__widget';
     widgetDiv.style.height = '100%';
     widgetDiv.style.width = '100%';
-    container.appendChild(widgetDiv);
+    inner.appendChild(widgetDiv);
 
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
@@ -51,25 +53,34 @@ export default function TradingViewChart({ symbol, height = 500, interval = '60'
       style: '1',
       locale: 'en',
       backgroundColor: '#0d1520',
+      gridColor: '#1a2535',
       hide_top_toolbar: false,
       hide_legend: false,
       save_image: false,
       height,
       width: '100%',
     });
-    container.appendChild(script);
+    inner.appendChild(script);
 
     return () => {
-      container.innerHTML = '';
+      // Cleanup also only touches the inner div, never React's tree
+      if (inner) inner.innerHTML = '';
     };
   }, [isVisible, symbol, interval, height]);
 
   return (
     <div
-      ref={containerRef}
-      className="tradingview-widget-container"
+      ref={outerRef}
       style={{ height: `${height}px`, width: '100%', position: 'relative', background: '#0d1520' }}
     >
+      {/* TradingView's playground - React never re-renders inside this */}
+      <div
+        ref={innerRef}
+        className="tradingview-widget-container"
+        style={{ height: '100%', width: '100%' }}
+      />
+
+      {/* Loader overlay - lives outside the TradingView div, React-managed */}
       {!isLoaded && (
         <div style={{
           position: 'absolute',
@@ -82,6 +93,7 @@ export default function TradingViewChart({ symbol, height = 500, interval = '60'
           color: '#475569',
           fontSize: '12px',
           pointerEvents: 'none',
+          background: '#0d1520',
         }}>
           <div style={{
             width: '32px',
