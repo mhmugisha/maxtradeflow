@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { fetchPrices, fetchScreener } from '../../lib/api';
+import { fetchPrices, fetchScreener } from '../../../lib/api';
 
 const COMMODITY_INFO = {
   'xauusd': { display: 'XAU/USD', name: 'Gold / US Dollar', tv: 'OANDA:XAUUSD', icon: '🥇' },
