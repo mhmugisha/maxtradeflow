@@ -4,100 +4,377 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../../lib/api';
 
-export default function Forex() {
+const FOREX_PAIRS = [
+  'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD',
+  'USD/CAD', 'EUR/GBP', 'AUD/JPY', 'GBP/AUD', 'CHF/JPY', 'NZD/USD'
+];
+
+const PAIR_NAMES = {
+  'EUR/USD': 'Euro / US Dollar',
+  'GBP/USD': 'Pound / US Dollar',
+  'USD/JPY': 'US Dollar / Yen',
+  'GBP/JPY': 'Pound / Yen',
+  'AUD/USD': 'Aussie / US Dollar',
+  'USD/CAD': 'US Dollar / Canadian',
+  'EUR/GBP': 'Euro / Pound',
+  'AUD/JPY': 'Aussie / Yen',
+  'GBP/AUD': 'Pound / Aussie',
+  'CHF/JPY': 'Franc / Yen',
+  'NZD/USD': 'Kiwi / US Dollar',
+};
+
+const FILTERS = ['All Pairs', 'Majors', 'Minors', 'JPY Pairs', 'GBP Pairs'];
+
+const MAJORS = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
+const JPY_PAIRS = ['USD/JPY', 'GBP/JPY', 'AUD/JPY', 'CHF/JPY'];
+const GBP_PAIRS = ['GBP/USD', 'GBP/JPY', 'GBP/AUD', 'EUR/GBP'];
+
+export default function ForexPage() {
   const [prices, setPrices] = useState([]);
   const [screener, setScreener] = useState([]);
+  const [recentSignals, setRecentSignals] = useState([]);
+  const [filter, setFilter] = useState('All Pairs');
+  const [lastUpdate, setLastUpdate] = useState('');
 
   useEffect(() => {
-    fetchPrices().then(setPrices);
-    fetchScreener().then(setScreener);
-
-    const interval = setInterval(() => {
-      fetchPrices().then(setPrices);
-    }, 5000);
-
+    const load = () => {
+      fetchPrices().then(p => {
+        setPrices(p);
+        setLastUpdate(new Date().toLocaleTimeString());
+      });
+      fetchScreener().then(setScreener);
+    };
+    load();
+    const interval = setInterval(load, 5000);
+    fetch('/api/articles?category=signal&limit=5')
+      .then(r => r.json())
+      .then(d => setRecentSignals((d.articles || []).filter(a =>
+        FOREX_PAIRS.some(p => a.ticker === p.replace('/', ''))
+      )))
+      .catch(() => {});
     return () => clearInterval(interval);
   }, []);
 
-  const forexPairs = prices.filter(price =>
-    price.symbol.includes('/') && !price.symbol.includes('US500') && !price.symbol.includes('NAS100') && !price.symbol.includes('US30')
-  );
+  const forexPrices = prices.filter(p => FOREX_PAIRS.includes(p.symbol));
+  const forexScreener = screener.filter(s => FOREX_PAIRS.includes(s.symbol));
 
-  const forexSignals = screener.filter(signal =>
-    signal.symbol.includes('/') && !signal.symbol.includes('US500') && !signal.symbol.includes('NAS100') && !signal.symbol.includes('US30')
-  );
+  const filteredPrices = forexPrices.filter(p => {
+    if (filter === 'All Pairs') return true;
+    if (filter === 'Majors') return MAJORS.includes(p.symbol);
+    if (filter === 'Minors') return !MAJORS.includes(p.symbol);
+    if (filter === 'JPY Pairs') return JPY_PAIRS.includes(p.symbol);
+    if (filter === 'GBP Pairs') return GBP_PAIRS.includes(p.symbol);
+    return true;
+  });
+
+  const tradeSignals = forexScreener.filter(s => s.action === 'TRADE').length;
+  const watchSignals = forexScreener.filter(s => s.action === 'WATCH').length;
+
+  const getSignal = (symbol) => forexScreener.find(s => s.symbol === symbol);
+
+  const ratingColor = (rating) => {
+    if (rating === 'TRADE') return { bg: '#1D9E7520', color: '#1D9E75', border: '#1D9E7540' };
+    if (rating === 'WATCH') return { bg: '#EF9F2720', color: '#EF9F27', border: '#EF9F2740' };
+    return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
+  };
+
+  const s = { background: '#080d14', minHeight: '100vh', color: '#e2e8f0' };
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-[#60c8d4] mb-4">Forex Markets</h1>
-          <p className="text-[#3a6070] text-lg">Live prices and AI-powered trading signals</p>
+    <div style={s}>
+
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '28px 24px 20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ fontSize: '11px', color: '#475569', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Live Markets</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 4px' }}>Forex Markets</h1>
+              <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>Live prices · AI signal scores · Recent articles</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {[
+                { label: 'Pairs Tracked', value: '11', color: '#60c8d4' },
+                { label: 'Active Signals', value: tradeSignals.toString(), color: '#1D9E75' },
+                { label: 'Strongest', value: 'USD', color: '#f1f5f9' },
+              ].map(card => (
+                <div key={card.label} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', minWidth: '80px' }}>
+                  <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{card.label}</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', color: card.color }}>{card.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px' }}>
+
+        {/* LEFT COLUMN */}
+        <div>
+          {/* Filter Tabs */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            {FILTERS.map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '7px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer',
+                background: filter === f ? '#60c8d4' : 'transparent',
+                color: filter === f ? '#080d14' : '#64748b',
+                border: filter === f ? 'none' : '1px solid #1a2535',
+                fontWeight: filter === f ? '600' : '400',
+              }}>
+                {f}
+              </button>
+            ))}
+          </div>
+
+          {/* Live Prices Table */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '24px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Live Prices</div>
+              <div style={{ fontSize: '11px', color: '#475569' }}>
+                {lastUpdate && <span style={{ color: '#1D9E75' }}>● </span>}
+                Updating every 5s {lastUpdate && `· ${lastUpdate}`}
+              </div>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1a2535' }}>
+                    {['Pair', 'Bid', 'Ask', 'Spread', 'Score', 'Direction', 'Signal', ''].map(h => (
+                      <th key={h} style={{ padding: '10px 12px', color: '#475569', fontWeight: '400', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPrices.length > 0 ? filteredPrices.map((price, i) => {
+                    const signal = getSignal(price.symbol);
+                    const rc = signal ? ratingColor(signal.action) : null;
+                    return (
+                      <tr key={i} style={{ borderBottom: '1px solid #0a1020' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontWeight: '600', color: '#f1f5f9' }}>{price.symbol}</div>
+                          <div style={{ fontSize: '11px', color: '#475569' }}>{PAIR_NAMES[price.symbol]}</div>
+                        </td>
+                        <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace', fontWeight: '500' }}>{price.bid}</td>
+                        <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace' }}>{price.ask}</td>
+                        <td style={{ padding: '12px', color: '#475569', fontFamily: 'monospace' }}>{price.spread}</td>
+                        <td style={{ padding: '12px' }}>
+                          {signal ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', width: '48px' }}>
+                                <div style={{ height: '4px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : signal.score >= 6 ? '#EF9F27' : '#e05555', width: `${signal.score * 10}%` }} />
+                              </div>
+                              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{signal.score}</span>
+                            </div>
+                          ) : <span style={{ color: '#1a2535' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          {signal ? (
+                            <span style={{ color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555', fontSize: '12px', fontWeight: '600' }}>
+                              {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
+                            </span>
+                          ) : <span style={{ color: '#1a2535' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          {signal && rc ? (
+                            <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '4px', padding: '3px 8px', fontSize: '10px', fontWeight: '700' }}>
+                              {signal.action}
+                            </span>
+                          ) : <span style={{ color: '#1a2535' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <Link href={`/articles?ticker=${price.symbol.replace('/', '')}`} style={{ textDecoration: 'none' }}>
+                            <span style={{ fontSize: '11px', color: '#60c8d4', border: '1px solid #1a2535', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                              Analysis →
+                            </span>
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: '#475569' }}>Loading prices...</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Signal Scores Section */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '24px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Signal Scores</div>
+              <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>View all articles →</Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1px', background: '#1a2535' }}>
+              {forexScreener.length > 0 ? forexScreener.map((signal, i) => {
+                const rc = ratingColor(signal.action);
+                return (
+                  <div key={i} style={{ background: '#0d1520', padding: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '14px' }}>{signal.symbol}</span>
+                      <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: '700' }}>{signal.action}</span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555', marginBottom: '4px' }}>
+                      {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ flex: 1, background: '#1a2535', borderRadius: '2px', height: '3px' }}>
+                        <div style={{ height: '3px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : '#EF9F27', width: `${signal.score * 10}%` }} />
+                      </div>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>{signal.score}/10</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>ADX {signal.adx}</div>
+                  </div>
+                );
+              }) : (
+                <div style={{ gridColumn: '1/-1', padding: '24px', textAlign: 'center', color: '#475569' }}>Loading signals...</div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Forex Signals */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Recent Forex Signals</div>
+              <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>All forex signals →</Link>
+            </div>
+            <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+              {recentSignals.length > 0 ? recentSignals.map((article, i) => (
+                <Link key={i} href={`/articles/${article.slug}`} style={{ textDecoration: 'none' }}>
+                  <div style={{ background: '#060b11', border: '1px solid #1a2535', borderRadius: '8px', padding: '14px', cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = '#60c8d4'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = '#1a2535'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: '#60c8d4', fontWeight: '700', fontSize: '13px' }}>{article.ticker}</span>
+                      <span style={{ background: '#1D9E7520', color: '#1D9E75', border: '1px solid #1D9E7540', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: '700' }}>{article.rating}</span>
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', lineHeight: '1.4' }}>{article.title}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569' }}>
+                      <span>{new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      <span>{article.score}/10</span>
+                    </div>
+                  </div>
+                </Link>
+              )) : (
+                <div style={{ gridColumn: '1/-1', color: '#475569', fontSize: '13px', padding: '8px 0' }}>
+                  Forex signal articles will appear here as the bot fires signals.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Live Prices Grid */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6">Live Prices</h2>
-          <div className="bg-[#111e2e] border border-[#1a2e42] rounded-lg overflow-hidden">
-            <div className="grid grid-cols-4 gap-4 p-4 bg-[#1a2e42] font-semibold text-sm">
-              <div>Symbol</div>
-              <div>Bid</div>
-              <div>Ask</div>
-              <div>Spread</div>
+        {/* RIGHT SIDEBAR */}
+        <div>
+          {/* AdSense Top */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
+              <span style={{ fontSize: '10px', color: '#1a2535', textTransform: 'uppercase', letterSpacing: '1px' }}>Advertisement</span>
             </div>
-            {forexPairs.map((price, index) => (
-              <div key={index} className="grid grid-cols-4 gap-4 p-4 border-t border-[#1a2e42] text-sm">
-                <div className="font-medium">{price.symbol}</div>
-                <div className="text-[#60c8d4]">{price.bid}</div>
-                <div className="text-[#60c8d4]">{price.ask}</div>
-                <div className="text-[#3a6070]">{price.spread}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Signal Scores Table */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-6">Signal Scores</h2>
-          <div className="bg-[#111e2e] border border-[#1a2e42] rounded-lg overflow-hidden">
-            <div className="grid grid-cols-5 gap-4 p-4 bg-[#1a2e42] font-semibold text-sm">
-              <div>Symbol</div>
-              <div>Score</div>
-              <div>ADX</div>
-              <div>Direction</div>
-              <div>Action</div>
+            <div style={{ width: '100%', height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a2535', fontSize: '12px' }}>
+              AdSense 300×250
             </div>
-            {forexSignals.map((signal, index) => (
-              <div key={index} className="grid grid-cols-5 gap-4 p-4 border-t border-[#1a2e42] text-sm">
-                <div className="font-medium">{signal.symbol}</div>
-                <div>{signal.score}</div>
-                <div>{signal.adx}</div>
-                <div>{signal.direction}</div>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  signal.action === 'TRADE' ? 'bg-[#1D9E75] text-white' :
-                  signal.action === 'WATCH' ? 'bg-[#EF9F27] text-white' :
-                  'bg-[#e05555] text-white'
-                }`}>
-                  {signal.action}
-                </span>
-              </div>
-            ))}
           </div>
-        </section>
 
-        {/* Footer */}
-        <footer className="mt-16 bg-[#111e2e] border-t border-[#1a2e42] py-8 rounded-lg text-center">
-          <div className="flex flex-wrap justify-center gap-6 mb-4">
-            <Link href="/" className="text-[#c8dce8] hover:text-[#60c8d4]">Home</Link>
-            <Link href="/forex" className="text-[#c8dce8] hover:text-[#60c8d4]">Forex</Link>
-            <Link href="/indices" className="text-[#c8dce8] hover:text-[#60c8d4]">Indices</Link>
-            <Link href="/subscribe" className="text-[#c8dce8] hover:text-[#60c8d4]">Subscribe</Link>
+          {/* Top Signals Today */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Top Signals Today</div>
+            </div>
+            <div style={{ padding: '8px 0' }}>
+              {forexScreener.filter(s => s.action === 'TRADE').slice(0, 5).map((signal, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #060b11' }}>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#f1f5f9', fontSize: '13px' }}>{signal.symbol}</div>
+                    <div style={{ fontSize: '11px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' }}>
+                      {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#1D9E75' }}>{signal.score}</div>
+                    <div style={{ fontSize: '10px', color: '#475569' }}>/ 10</div>
+                  </div>
+                </div>
+              ))}
+              {forexScreener.filter(s => s.action === 'TRADE').length === 0 && (
+                <div style={{ padding: '16px', color: '#475569', fontSize: '13px' }}>No TRADE signals active</div>
+              )}
+            </div>
           </div>
-          <p className="text-[#3a6070] text-sm">
-            Data powered by cTrader/Pepperstone. Analysis generated by AI.
-          </p>
-        </footer>
+
+          {/* Quick Calculators */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Quick Calculators</div>
+            </div>
+            <div style={{ padding: '8px 0' }}>
+              {[
+                { icon: '⚖️', name: 'Position Size', href: '/tools/position-size' },
+                { icon: '📐', name: 'Pip Calculator', href: '/tools/pip-calculator' },
+                { icon: '🎯', name: 'Risk/Reward', href: '/tools/risk-reward' },
+                { icon: '🏦', name: 'Margin Calculator', href: '/tools/margin-calculator' },
+              ].map(tool => (
+                <Link key={tool.name} href={tool.href} style={{ textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderBottom: '1px solid #060b11' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <span style={{ fontSize: '16px' }}>{tool.icon}</span>
+                    <span style={{ color: '#94a3b8', fontSize: '13px' }}>{tool.name}</span>
+                    <span style={{ color: '#60c8d4', marginLeft: 'auto', fontSize: '12px' }}>→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* AdSense Bottom */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
+            <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a2535' }}>
+              <span style={{ fontSize: '10px', color: '#1a2535', textTransform: 'uppercase', letterSpacing: '1px' }}>Advertisement</span>
+            </div>
+            <div style={{ width: '100%', height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a2535', fontSize: '12px' }}>
+              AdSense 300×250
+            </div>
+          </div>
+
+          {/* Session Status */}
+          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Session Status</div>
+            </div>
+            <div style={{ padding: '8px 0' }}>
+              {[
+                { name: 'Sydney', tz: 10 },
+                { name: 'Tokyo', tz: 9 },
+                { name: 'London', tz: 1 },
+                { name: 'New York', tz: -4 },
+              ].map(session => {
+                const now = new Date();
+                const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+                const local = new Date(utc + session.tz * 3600000);
+                const h = local.getHours();
+                const day = local.getDay();
+                const open = day !== 0 && day !== 6 && h >= 9 && h < 17;
+                return (
+                  <div key={session.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #060b11' }}>
+                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>{session.name}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: open ? '#1D9E75' : '#475569' }}>
+                      {open ? '● Open' : '○ Closed'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
