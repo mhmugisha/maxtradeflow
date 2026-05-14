@@ -291,51 +291,6 @@ export default function ForexPage() {
             </div>
           </div>
 
-          {/* Signal Scores — vertical stacked list */}
-          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Signal Scores</div>
-              <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>All →</Link>
-            </div>
-            <div style={{ padding: '8px 0' }}>
-              {forexScreener.length > 0 ? forexScreener.map((signal, i) => {
-                const rc = ratingColor(signal.action);
-                return (
-                  <Link key={i} href={`/forex/${signal.symbol.replace('/', '').toLowerCase()}`} style={{ textDecoration: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderBottom: '1px solid #060b11' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {/* Symbol */}
-                      <div style={{ minWidth: '64px' }}>
-                        <div style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '12px' }}>{signal.symbol}</div>
-                        <div style={{ fontSize: '10px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' }}>
-                          {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
-                        </div>
-                      </div>
-                      {/* Score bar */}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', marginBottom: '3px' }}>
-                          <div style={{ height: '4px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : signal.score >= 6 ? '#EF9F27' : '#e05555', width: `${signal.score * 10}%` }} />
-                        </div>
-                        <div style={{ fontSize: '10px', color: '#475569' }}>ADX {signal.adx}</div>
-                      </div>
-                      {/* Score + badge */}
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#f1f5f9', whiteSpace: 'nowrap' }}>{signal.score}/10</div>
-                        <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '3px', padding: '1px 5px', fontSize: '9px', fontWeight: '700' }}>
-                          {signal.action}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              }) : (
-                <div style={{ padding: '16px', color: '#475569', fontSize: '13px' }}>Loading signals...</div>
-              )}
-            </div>
-          </div>
-
           {/* Quick Calculators */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
