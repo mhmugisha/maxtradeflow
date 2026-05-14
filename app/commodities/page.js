@@ -126,8 +126,8 @@ export default function CommoditySymbolPage({ params }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
                 {[
                   { label: 'Direction', value: `${signal.direction === 'LONG' ? '▲' : '▼'} ${signal.direction}`, color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' },
-                  { label: 'ADX', value: signal.adx, color: '#60c8d4' },
-                  { label: 'RSI', value: signal.rsi, color: '#60c8d4' },
+                  { label: 'ADX', value: signal.adx, color: '#e05555' },
+                  { label: 'RSI', value: signal.rsi, color: '#e05555' },
                 ].map(item => (
                   <div key={item.label} style={{ background: '#060b11', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '12px', color: '#475569' }}>{item.label}</span>
