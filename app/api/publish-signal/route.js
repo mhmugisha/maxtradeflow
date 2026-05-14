@@ -67,13 +67,15 @@ Requirements:
       INSERT INTO articles (
         slug, title, excerpt, content, ticker, category, rating,
         score, adx, rsi, direction, entry_mode, tags,
-        seo_title, seo_description, published
+        seo_title, seo_description, published,
+        entry_price, stop_loss, take_profit, rr_ratio
       ) VALUES (
         ${slug}, ${title}, ${excerpt}, ${content},
         ${ticker}, ${'signal'}, ${ratingLabel},
         ${score}, ${adx}, ${rsi}, ${direction}, ${entry_mode},
         ${[ticker, direction, ratingLabel, entry_mode, 'signal']},
-        ${seoTitle}, ${seoDescription}, ${true}
+        ${seoTitle}, ${seoDescription}, ${true},
+        ${entry_price || null}, ${stop_loss || null}, ${take_profit || null}, ${rr_ratio || null}
       )
       ON CONFLICT (slug) DO UPDATE SET
         content = EXCLUDED.content,
