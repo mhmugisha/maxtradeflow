@@ -148,6 +148,21 @@ export default function CommoditiesPage() {
                       <span style={{ background: '#1D9E7520', color: '#1D9E75', border: '1px solid #1D9E7540', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: '700' }}>{article.rating}</span>
                     </div>
                     <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px', lineHeight: '1.4' }}>{article.title}</div>
+                    {article.entry_price && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px', marginBottom: '8px' }}>
+                        {[
+                          { label: 'Entry', value: parseFloat(article.entry_price).toFixed(2), color: '#60c8d4' },
+                          { label: 'SL', value: parseFloat(article.stop_loss).toFixed(2), color: '#e05555' },
+                          { label: 'TP', value: parseFloat(article.take_profit).toFixed(2), color: '#1D9E75' },
+                          { label: 'R:R', value: `1:${parseFloat(article.rr_ratio).toFixed(1)}`, color: '#f1f5f9' },
+                        ].map(item => (
+                          <div key={item.label} style={{ background: '#0a1020', borderRadius: '4px', padding: '4px 6px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '9px', color: '#475569', marginBottom: '2px' }}>{item.label}</div>
+                            <div style={{ fontSize: '10px', fontWeight: '600', color: item.color, fontFamily: 'monospace' }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569' }}>
                       <span>{new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       <span>{article.score}/10</span>
