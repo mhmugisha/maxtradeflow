@@ -8,7 +8,7 @@ import { fetchPrices, fetchScreener } from '../../lib/api';
 const STOCK_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'];
 
 const STOCK_INFO = {
-  'AAPL':  { display: 'AAPL',  name: 'Apple Inc.',          icon: '',  color: '#A2AAAD', decimals: 2, sector: 'Tech' },
+  'AAPL':  { display: 'AAPL',  name: 'Apple Inc.',          icon: '🍎', color: '#A2AAAD', decimals: 2, sector: 'Tech' },
   'MSFT':  { display: 'MSFT',  name: 'Microsoft Corp.',     icon: '⊞',  color: '#00A4EF', decimals: 2, sector: 'Tech' },
   'GOOGL': { display: 'GOOGL', name: 'Alphabet Inc.',       icon: 'G',  color: '#4285F4', decimals: 2, sector: 'Tech' },
   'AMZN':  { display: 'AMZN',  name: 'Amazon.com Inc.',     icon: 'a',  color: '#FF9900', decimals: 2, sector: 'Consumer' },

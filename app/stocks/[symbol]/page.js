@@ -8,7 +8,7 @@ import TradingViewChart from '../../../components/TradingViewChart';
 import Skeleton from '../../../components/Skeleton';
 
 const STOCK_INFO = {
-  'aapl':  { display: 'AAPL',  name: 'Apple Inc.',          tv: 'NASDAQ:AAPL',  icon: '',  color: '#A2AAAD', decimals: 2, related: ['msft', 'googl', 'nvda'] },
+  'aapl':  { display: 'AAPL',  name: 'Apple Inc.',          tv: 'NASDAQ:AAPL',  icon: '🍎', color: '#A2AAAD', decimals: 2, related: ['msft', 'googl', 'nvda'] },
   'msft':  { display: 'MSFT',  name: 'Microsoft Corp.',     tv: 'NASDAQ:MSFT',  icon: '⊞',  color: '#00A4EF', decimals: 2, related: ['aapl', 'googl', 'meta'] },
   'googl': { display: 'GOOGL', name: 'Alphabet Inc.',       tv: 'NASDAQ:GOOGL', icon: 'G',  color: '#4285F4', decimals: 2, related: ['meta', 'msft', 'amzn'] },
   'amzn':  { display: 'AMZN',  name: 'Amazon.com Inc.',     tv: 'NASDAQ:AMZN',  icon: 'a',  color: '#FF9900', decimals: 2, related: ['tsla', 'googl', 'meta'] },
