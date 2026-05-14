@@ -92,10 +92,10 @@ export default async function ArticlePage({ params }) {
                   { label: 'Entry Mode', value: article.entry_mode || '—', color: '#c8dce8' },
                   { label: 'ADX', value: article.adx || '—', color: '#c8dce8' },
                   { label: 'RSI', value: article.rsi || '—', color: '#c8dce8' },
-                  { label: 'Entry Price', value: article.entry_price ? parseFloat(article.entry_price).toFixed(5) : '—', color: '#60c8d4' },
+                  { label: 'Entry Price', value: article.entry_price ? parseFloat(article.entry_price).toFixed(article.ticker && ['BTCUSD','ETHUSD','SOLUSD','BNBUSD'].includes(article.ticker) ? 2 : article.ticker && ['XRPUSD','ADAUSD'].includes(article.ticker) ? 4 : 5) : '—', color: '#60c8d4' },
                   { label: 'R:R Ratio', value: article.rr_ratio ? `1:${parseFloat(article.rr_ratio).toFixed(2)}` : '—', color: '#60c8d4' },
-                  { label: 'Stop Loss', value: article.stop_loss ? parseFloat(article.stop_loss).toFixed(5) : '—', color: '#e05555' },
-                  { label: 'Take Profit', value: article.take_profit ? parseFloat(article.take_profit).toFixed(5) : '—', color: '#1D9E75' },
+                  { label: 'Stop Loss', value: article.stop_loss ? parseFloat(article.stop_loss).toFixed(article.ticker && ['BTCUSD','ETHUSD','SOLUSD','BNBUSD'].includes(article.ticker) ? 2 : article.ticker && ['XRPUSD','ADAUSD'].includes(article.ticker) ? 4 : 5) : '—', color: '#e05555' },
+                  { label: 'Take Profit', value: article.take_profit ? parseFloat(article.take_profit).toFixed(article.ticker && ['BTCUSD','ETHUSD','SOLUSD','BNBUSD'].includes(article.ticker) ? 2 : article.ticker && ['XRPUSD','ADAUSD'].includes(article.ticker) ? 4 : 5) : '—', color: '#1D9E75' },
                 ].map(({ label, value, color }) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '8px', background: '#0d1520', borderRadius: '6px' }}>
                     <span style={{ color: '#3a6070' }}>{label}</span>
