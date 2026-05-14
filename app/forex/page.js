@@ -24,10 +24,10 @@ const PAIR_NAMES = {
 };
 
 const FILTERS = ['All Pairs', 'Majors', 'Minors', 'JPY Pairs', 'GBP Pairs'];
-
 const MAJORS = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
 const JPY_PAIRS = ['USD/JPY', 'GBP/JPY', 'AUD/JPY', 'CHF/JPY'];
 const GBP_PAIRS = ['GBP/USD', 'GBP/JPY', 'GBP/AUD', 'EUR/GBP'];
+const PAGE_SIZE = 7;
 
 export default function ForexPage() {
   const [prices, setPrices] = useState([]);
@@ -35,18 +35,16 @@ export default function ForexPage() {
   const [recentSignals, setRecentSignals] = useState([]);
   const [filter, setFilter] = useState('All Pairs');
   const [lastUpdate, setLastUpdate] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const load = () => {
-      fetchPrices().then(p => {
-        setPrices(p);
-        setLastUpdate(new Date().toLocaleTimeString());
-      });
+      fetchPrices().then(p => { setPrices(p); setLastUpdate(new Date().toLocaleTimeString()); });
       fetchScreener().then(setScreener);
     };
     load();
     const interval = setInterval(load, 5000);
-    fetch('/api/articles?category=signal&limit=5')
+    fetch('/api/articles?category=signal&limit=6')
       .then(r => r.json())
       .then(d => setRecentSignals((d.articles || []).filter(a =>
         FOREX_PAIRS.some(p => a.ticker === p.replace('/', ''))
@@ -54,6 +52,9 @@ export default function ForexPage() {
       .catch(() => {});
     return () => clearInterval(interval);
   }, []);
+
+  // Reset page when filter changes
+  useEffect(() => { setPage(1); }, [filter]);
 
   const forexPrices = prices.filter(p => FOREX_PAIRS.includes(p.symbol));
   const forexScreener = screener.filter(s => FOREX_PAIRS.includes(s.symbol));
@@ -67,9 +68,9 @@ export default function ForexPage() {
     return true;
   });
 
+  const totalPages = Math.ceil(filteredPrices.length / PAGE_SIZE);
+  const pagedPrices = filteredPrices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const tradeSignals = forexScreener.filter(s => s.action === 'TRADE').length;
-  const watchSignals = forexScreener.filter(s => s.action === 'WATCH').length;
-
   const getSignal = (symbol) => forexScreener.find(s => s.symbol === symbol);
 
   const ratingColor = (rating) => {
@@ -78,10 +79,8 @@ export default function ForexPage() {
     return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
   };
 
-  const s = { background: '#080d14', minHeight: '100vh', color: '#e2e8f0' };
-
   return (
-    <div style={s}>
+    <div style={{ background: '#080d14', minHeight: '100vh', color: '#e2e8f0' }}>
 
       {/* Hero */}
       <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '28px 24px 20px' }}>
@@ -128,7 +127,7 @@ export default function ForexPage() {
             ))}
           </div>
 
-          {/* Live Prices Table */}
+          {/* Live Prices Table — fixed height via pagination */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '24px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Live Prices</div>
@@ -141,13 +140,13 @@ export default function ForexPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #1a2535' }}>
-                    {['Pair', 'Bid', 'Ask', 'Spread', 'Score', 'Direction', 'Signal', ''].map(h => (
+                    {['Pair', 'Bid', 'Ask', 'Spread', 'ADX', 'Score', 'Direction', 'Signal', ''].map(h => (
                       <th key={h} style={{ padding: '10px 12px', color: '#475569', fontWeight: '400', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPrices.length > 0 ? filteredPrices.map((price, i) => {
+                  {pagedPrices.length > 0 ? pagedPrices.map((price, i) => {
                     const signal = getSignal(price.symbol);
                     const rc = signal ? ratingColor(signal.action) : null;
                     return (
@@ -162,13 +161,25 @@ export default function ForexPage() {
                         <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace', fontWeight: '500' }}>{price.bid}</td>
                         <td style={{ padding: '12px', color: '#60c8d4', fontFamily: 'monospace' }}>{price.ask}</td>
                         <td style={{ padding: '12px', color: '#475569', fontFamily: 'monospace' }}>{price.spread}</td>
+                        {/* ADX column */}
+                        <td style={{ padding: '12px' }}>
+                          {signal ? (
+                            <span style={{
+                              fontSize: '12px', fontWeight: '600',
+                              color: parseFloat(signal.adx) >= 25 ? '#1D9E75' : parseFloat(signal.adx) >= 15 ? '#EF9F27' : '#e05555'
+                            }}>
+                              {signal.adx}
+                            </span>
+                          ) : <span style={{ color: '#1a2535' }}>—</span>}
+                        </td>
+                        {/* Score as X/10 */}
                         <td style={{ padding: '12px' }}>
                           {signal ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', width: '48px' }}>
+                              <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', width: '40px' }}>
                                 <div style={{ height: '4px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : signal.score >= 6 ? '#EF9F27' : '#e05555', width: `${signal.score * 10}%` }} />
                               </div>
-                              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{signal.score}</span>
+                              <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{signal.score}/10</span>
                             </div>
                           ) : <span style={{ color: '#1a2535' }}>—</span>}
                         </td>
@@ -197,54 +208,51 @@ export default function ForexPage() {
                     );
                   }) : (
                     <tr>
-                      <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: '#475569' }}>Loading prices...</td>
+                      <td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: '#475569' }}>Loading prices...</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid #1a2535' }}>
+                <div style={{ fontSize: '12px', color: '#475569' }}>
+                  Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, filteredPrices.length)} of {filteredPrices.length} pairs
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{
+                    padding: '5px 12px', borderRadius: '5px', fontSize: '12px', cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    background: 'transparent', border: '1px solid #1a2535',
+                    color: page === 1 ? '#1a2535' : '#60c8d4',
+                  }}>← Prev</button>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button key={i} onClick={() => setPage(i + 1)} style={{
+                      padding: '5px 10px', borderRadius: '5px', fontSize: '12px', cursor: 'pointer',
+                      background: page === i + 1 ? '#60c8d4' : 'transparent',
+                      color: page === i + 1 ? '#080d14' : '#64748b',
+                      border: page === i + 1 ? 'none' : '1px solid #1a2535',
+                      fontWeight: page === i + 1 ? '600' : '400',
+                    }}>{i + 1}</button>
+                  ))}
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{
+                    padding: '5px 12px', borderRadius: '5px', fontSize: '12px', cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                    background: 'transparent', border: '1px solid #1a2535',
+                    color: page === totalPages ? '#1a2535' : '#60c8d4',
+                  }}>Next →</button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Signal Scores Section */}
-          <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '24px', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Signal Scores</div>
-              <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>View all articles →</Link>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1px', background: '#1a2535' }}>
-              {forexScreener.length > 0 ? forexScreener.map((signal, i) => {
-                const rc = ratingColor(signal.action);
-                return (
-                  <div key={i} style={{ background: '#0d1520', padding: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '14px' }}>{signal.symbol}</span>
-                      <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontWeight: '700' }}>{signal.action}</span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555', marginBottom: '4px' }}>
-                      {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ flex: 1, background: '#1a2535', borderRadius: '2px', height: '3px' }}>
-                        <div style={{ height: '3px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : '#EF9F27', width: `${signal.score * 10}%` }} />
-                      </div>
-                      <span style={{ fontSize: '11px', color: '#64748b' }}>{signal.score}/10</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#475569', marginTop: '4px' }}>ADX {signal.adx}</div>
-                  </div>
-                );
-              }) : (
-                <div style={{ gridColumn: '1/-1', padding: '24px', textAlign: 'center', color: '#475569' }}>Loading signals...</div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Forex Signals */}
+          {/* Recent Forex Signals — now immediately below table */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Recent Forex Signals</div>
               <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>All forex signals →</Link>
             </div>
-            <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+            <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
               {recentSignals.length > 0 ? recentSignals.map((article, i) => (
                 <Link key={i} href={`/articles/${article.slug}`} style={{ textDecoration: 'none' }}>
                   <div style={{ background: '#060b11', border: '1px solid #1a2535', borderRadius: '8px', padding: '14px', cursor: 'pointer' }}
@@ -283,28 +291,47 @@ export default function ForexPage() {
             </div>
           </div>
 
-          {/* Top Signals Today */}
+          {/* Signal Scores — vertical stacked list */}
           <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Top Signals Today</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #1a2535' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Signal Scores</div>
+              <Link href="/articles" style={{ fontSize: '11px', color: '#60c8d4', textDecoration: 'none' }}>All →</Link>
             </div>
             <div style={{ padding: '8px 0' }}>
-              {forexScreener.filter(s => s.action === 'TRADE').slice(0, 5).map((signal, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #060b11' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', color: '#f1f5f9', fontSize: '13px' }}>{signal.symbol}</div>
-                    <div style={{ fontSize: '11px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' }}>
-                      {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
+              {forexScreener.length > 0 ? forexScreener.map((signal, i) => {
+                const rc = ratingColor(signal.action);
+                return (
+                  <Link key={i} href={`/forex/${signal.symbol.replace('/', '').toLowerCase()}`} style={{ textDecoration: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderBottom: '1px solid #060b11' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {/* Symbol */}
+                      <div style={{ minWidth: '64px' }}>
+                        <div style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '12px' }}>{signal.symbol}</div>
+                        <div style={{ fontSize: '10px', color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' }}>
+                          {signal.direction === 'LONG' ? '▲' : '▼'} {signal.direction}
+                        </div>
+                      </div>
+                      {/* Score bar */}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ background: '#1a2535', borderRadius: '2px', height: '4px', marginBottom: '3px' }}>
+                          <div style={{ height: '4px', borderRadius: '2px', background: signal.score >= 8 ? '#1D9E75' : signal.score >= 6 ? '#EF9F27' : '#e05555', width: `${signal.score * 10}%` }} />
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#475569' }}>ADX {signal.adx}</div>
+                      </div>
+                      {/* Score + badge */}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#f1f5f9', whiteSpace: 'nowrap' }}>{signal.score}/10</div>
+                        <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '3px', padding: '1px 5px', fontSize: '9px', fontWeight: '700' }}>
+                          {signal.action}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#1D9E75' }}>{signal.score}</div>
-                    <div style={{ fontSize: '10px', color: '#475569' }}>/ 10</div>
-                  </div>
-                </div>
-              ))}
-              {forexScreener.filter(s => s.action === 'TRADE').length === 0 && (
-                <div style={{ padding: '16px', color: '#475569', fontSize: '13px' }}>No TRADE signals active</div>
+                  </Link>
+                );
+              }) : (
+                <div style={{ padding: '16px', color: '#475569', fontSize: '13px' }}>Loading signals...</div>
               )}
             </div>
           </div>
