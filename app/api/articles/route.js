@@ -15,7 +15,7 @@ export async function GET(request) {
     let articles;
     if (category) {
       articles = await sql`
-        SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at
+        SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at, entry_price, stop_loss, take_profit, rr_ratio
         FROM articles
         WHERE published = true AND category = ${category}
         ORDER BY created_at DESC
@@ -23,7 +23,7 @@ export async function GET(request) {
       `;
     } else {
       articles = await sql`
-        SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at
+        SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at, entry_price, stop_loss, take_profit, rr_ratio
         FROM articles
         WHERE published = true
         ORDER BY created_at DESC
