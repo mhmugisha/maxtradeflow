@@ -79,6 +79,20 @@ export default function ForexPage() {
     return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
   };
 
+
+  const getSignalAge = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMs = now - created;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffMins < 1) return { label: 'Just now', color: '#1D9E75', dot: '🟢' };
+    if (diffMins < 30) return { label: `${diffMins}m ago`, color: '#1D9E75', dot: '🟢' };
+    if (diffMins < 120) return { label: `${diffMins}m ago`, color: '#EF9F27', dot: '🟡' };
+    if (diffHours < 24) return { label: `${diffHours}h ago`, color: '#e05555', dot: '🔴' };
+    return { label: `${Math.floor(diffHours/24)}d ago`, color: '#475569', dot: '⚫' };
+  };
+
   return (
     <div style={{ background: '#080d14', minHeight: '100vh', color: '#e2e8f0' }}>
 
@@ -280,7 +294,9 @@ export default function ForexPage() {
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569' }}>
-                      <span>{new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      <span style={{ color: getSignalAge(article.created_at).color }}>
+                        {getSignalAge(article.created_at).dot} {getSignalAge(article.created_at).label}
+                      </span>
                       <span>{article.score}/10</span>
                     </div>
                   </div>
