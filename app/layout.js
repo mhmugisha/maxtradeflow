@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import Link from "next/link";
+import Script from "next/script";
 import Footer from "../components/Footer";
 import "./globals.css";
 
@@ -7,6 +8,9 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
 });
+
+// AdSense publisher ID. Loaded site-wide for verification + future ad units.
+const ADSENSE_CLIENT_ID = "ca-pub-5322514100378472";
 
 export const metadata = {
   title: "MaxTradeFlow - AI-Powered Market Analysis",
@@ -86,6 +90,14 @@ function ToolsDropdown() {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#080d14] text-[#c8dce8]">
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111e2e] border-b border-[#1a2e42] px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
