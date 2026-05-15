@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPrices, fetchScreener } from '../../lib/api';
+import { fetchScreener } from '../../lib/api';
 
 const STOCK_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'];
 
@@ -29,28 +29,41 @@ export default function StocksPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    const load = () => {
-      fetchPrices().then(p => { setPrices(p); setLastUpdate(new Date().toLocaleTimeString()); });
-      fetchScreener().then(setScreener);
+    const loadStockPrices = () => {
+      fetch('/api/stock-prices')
+        .then(r => r.json())
+        .then(d => {
+          setPrices(d.stocks || []);
+          setLastUpdate(new Date().toLocaleTimeString());
+        })
+        .catch(() => {});
     };
-    load();
-    const interval = setInterval(load, 5000);
+    const loadScreener = () => {
+      fetchScreener().then(setScreener).catch(() => {});
+    };
+    loadStockPrices();
+    loadScreener();
+    // Stocks: poll every 10s (delayed quotes, no need for crypto-style 5s)
+    const priceInterval = setInterval(loadStockPrices, 10000);
+    const screenerInterval = setInterval(loadScreener, 5000);
     fetch('/api/articles?category=signal&limit=10')
       .then(r => r.json())
       .then(d => setRecentSignals((d.articles || []).filter(a => STOCK_SYMBOLS.includes(a.ticker))))
       .catch(() => {});
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(priceInterval);
+      clearInterval(screenerInterval);
+    };
   }, []);
 
   useEffect(() => { setPage(1); }, [filter]);
 
-  const stockPrices = prices.filter(p => STOCK_SYMBOLS.includes(p.symbol));
   const stockScreener = screener.filter(s => STOCK_SYMBOLS.includes(s.symbol));
   const tradeSignals = stockScreener.filter(s => s.action === 'TRADE').length;
 
-  // Build a list to display: even with no live prices, we want to render the stock list
+  // Build the display list — show all 7 stocks even if Finnhub hasn't returned yet
   const stocksToShow = STOCK_SYMBOLS.map(sym => {
-    const live = stockPrices.find(p => p.symbol === sym);
+    const live = prices.find(p => p.symbol === sym);
     return live || { symbol: sym };
   });
 
@@ -69,6 +82,18 @@ export default function StocksPage() {
     if (rating === 'TRADE') return { bg: '#1D9E7520', color: '#1D9E75', border: '#1D9E7540' };
     if (rating === 'WATCH') return { bg: '#EF9F2720', color: '#EF9F27', border: '#EF9F2740' };
     return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
+  };
+
+  const changeColor = (change) => {
+    if (change > 0) return '#1D9E75';
+    if (change < 0) return '#e05555';
+    return '#64748b';
+  };
+
+  const changeArrow = (change) => {
+    if (change > 0) return '▲';
+    if (change < 0) return '▼';
+    return '·';
   };
 
   const getSignalAge = (createdAt) => {
@@ -90,11 +115,11 @@ export default function StocksPage() {
       {/* Hero */}
       <div style={{ background: 'linear-gradient(180deg, #0d1f2d 0%, #080d14 100%)', borderBottom: '1px solid #1a2535', padding: '28px 24px 20px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ fontSize: '11px', color: '#475569', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Live Markets</div>
+          <div style={{ fontSize: '11px', color: '#475569', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Live Markets · 15-min Delayed</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 4px' }}>Stocks (Mag 7)</h1>
-              <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>AAPL · MSFT · GOOGL · AMZN · NVDA · META · TSLA · Charts & AI signal scores</p>
+              <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>AAPL · MSFT · GOOGL · AMZN · NVDA · META · TSLA · Live prices & AI signal scores</p>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               {[
@@ -120,7 +145,7 @@ export default function StocksPage() {
           {/* Feature Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
             {['AAPL', 'NVDA', 'TSLA'].map(symbol => {
-              const price = stockPrices.find(p => p.symbol === symbol);
+              const price = prices.find(p => p.symbol === symbol);
               const signal = getSignal(symbol);
               const info = getInfo(symbol);
               const rc = signal ? ratingColor(signal.action) : null;
@@ -147,11 +172,16 @@ export default function StocksPage() {
                       )}
                     </div>
                     {price ? (
-                      <div style={{ fontSize: '20px', fontWeight: '700', color: info.color, fontFamily: 'monospace', marginBottom: '8px' }}>
-                        ${parseFloat(price.bid).toFixed(info.decimals)}
-                      </div>
+                      <>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: info.color, fontFamily: 'monospace', marginBottom: '4px' }}>
+                          ${price.price.toFixed(info.decimals)}
+                        </div>
+                        <div style={{ fontSize: '12px', color: changeColor(price.change), fontFamily: 'monospace', marginBottom: '8px' }}>
+                          {changeArrow(price.change)} {price.change >= 0 ? '+' : ''}{price.change.toFixed(2)} ({price.changePercent >= 0 ? '+' : ''}{price.changePercent.toFixed(2)}%)
+                        </div>
+                      </>
                     ) : (
-                      <div style={{ fontSize: '12px', color: '#475569', marginBottom: '8px' }}>Live data coming soon</div>
+                      <div style={{ fontSize: '12px', color: '#475569', marginBottom: '8px' }}>Loading...</div>
                     )}
                     {signal && (
                       <div>
@@ -188,14 +218,14 @@ export default function StocksPage() {
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#f1f5f9' }}>Live Prices</div>
               <div style={{ fontSize: '11px', color: '#475569' }}>
                 {lastUpdate && <span style={{ color: '#1D9E75' }}>● </span>}
-                Updating every 5s {lastUpdate && `· ${lastUpdate}`}
+                Updating every 10s {lastUpdate && `· ${lastUpdate}`}
               </div>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #1a2535' }}>
-                    {['Stock', 'Bid', 'Ask', 'Spread', 'ADX', 'Score', 'Direction', 'Signal', ''].map(h => (
+                    {['Stock', 'Price', 'Change', 'ADX', 'Score', 'Direction', 'Signal', ''].map(h => (
                       <th key={h} style={{ padding: '10px 12px', color: '#475569', fontWeight: '400', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -205,7 +235,7 @@ export default function StocksPage() {
                     const signal = getSignal(stock.symbol);
                     const rc = signal ? ratingColor(signal.action) : null;
                     const info = getInfo(stock.symbol);
-                    const hasPrice = stock.bid !== undefined;
+                    const hasPrice = stock.price !== undefined;
                     return (
                       <tr key={i} style={{ borderBottom: '1px solid #0a1020' }}
                         onMouseEnter={e => e.currentTarget.style.background = '#060b11'}
@@ -222,13 +252,12 @@ export default function StocksPage() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px', color: hasPrice ? '#e05555' : '#1a2535', fontFamily: 'monospace', fontWeight: '500' }}>
-                          {hasPrice ? `$${parseFloat(stock.bid).toFixed(info.decimals)}` : '—'}
+                        <td style={{ padding: '12px', color: hasPrice ? '#f1f5f9' : '#1a2535', fontFamily: 'monospace', fontWeight: '600' }}>
+                          {hasPrice ? `$${stock.price.toFixed(info.decimals)}` : '—'}
                         </td>
-                        <td style={{ padding: '12px', color: hasPrice ? '#1D9E75' : '#1a2535', fontFamily: 'monospace' }}>
-                          {hasPrice ? `$${parseFloat(stock.ask).toFixed(info.decimals)}` : '—'}
+                        <td style={{ padding: '12px', color: hasPrice ? changeColor(stock.change) : '#1a2535', fontFamily: 'monospace', fontSize: '12px' }}>
+                          {hasPrice ? `${changeArrow(stock.change)} ${stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%)` : '—'}
                         </td>
-                        <td style={{ padding: '12px', color: '#475569', fontFamily: 'monospace' }}>{hasPrice ? stock.spread : '—'}</td>
                         <td style={{ padding: '12px' }}>
                           {signal ? <span style={{ fontSize: '12px', fontWeight: '600', color: parseFloat(signal.adx) >= 25 ? '#1D9E75' : parseFloat(signal.adx) >= 15 ? '#EF9F27' : '#e05555' }}>{signal.adx}</span> : <span style={{ color: '#1a2535' }}>—</span>}
                         </td>

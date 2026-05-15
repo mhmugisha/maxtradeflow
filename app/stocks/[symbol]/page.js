@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fetchPrices, fetchScreener } from '../../../lib/api';
+import { fetchScreener } from '../../../lib/api';
 import TradingViewChart from '../../../components/TradingViewChart';
 import Skeleton from '../../../components/Skeleton';
 
@@ -21,7 +21,7 @@ function PriceBoxSkeleton({ label }) {
   return (
     <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center' }}>
       <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{label}</div>
-      <Skeleton height="22px" style={{ margin: '0 auto', maxWidth: '70px' }} />
+      <Skeleton height="22px" style={{ margin: '0 auto', maxWidth: '80px' }} />
     </div>
   );
 }
@@ -57,30 +57,46 @@ export default function StockSymbolPage({ params }) {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    const load = () => {
-      fetchPrices().then(prices => {
-        const p = prices.find(p => p.symbol === botSymbol);
-        if (p) setPrice(p);
-      });
+    const loadPrice = () => {
+      fetch('/api/stock-prices')
+        .then(r => r.json())
+        .then(d => {
+          const p = (d.stocks || []).find(s => s.symbol === botSymbol);
+          if (p) setPrice(p);
+        })
+        .catch(() => {});
+    };
+    const loadSignal = () => {
       fetchScreener().then(screener => {
         const s = screener.find(s => s.symbol === botSymbol);
         if (s) setSignal(s);
         setSignalChecked(true);
       }).catch(() => setSignalChecked(true));
     };
-    load();
-    const interval = setInterval(load, 5000);
+    loadPrice();
+    loadSignal();
+    const priceInterval = setInterval(loadPrice, 10000);
+    const signalInterval = setInterval(loadSignal, 5000);
     fetch('/api/articles?category=signal&limit=10')
       .then(r => r.json())
       .then(d => setArticles((d.articles || []).filter(a => a.ticker === botSymbol)))
       .catch(() => {});
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(priceInterval);
+      clearInterval(signalInterval);
+    };
   }, [symbol]);
 
   const ratingColor = (rating) => {
     if (rating === 'TRADE') return { bg: '#1D9E7520', color: '#1D9E75', border: '#1D9E7540' };
     if (rating === 'WATCH') return { bg: '#EF9F2720', color: '#EF9F27', border: '#EF9F2740' };
     return { bg: '#e0555520', color: '#e05555', border: '#e0555540' };
+  };
+
+  const changeColor = (change) => {
+    if (change > 0) return '#1D9E75';
+    if (change < 0) return '#e05555';
+    return '#64748b';
   };
 
   const rc = signal ? ratingColor(signal.action) : null;
@@ -103,7 +119,7 @@ export default function StockSymbolPage({ params }) {
               </div>
               <div>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#f1f5f9', margin: '0 0 2px' }}>{info.display}</h1>
-                <div style={{ fontSize: '13px', color: '#64748b' }}>{info.name} · Stock</div>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>{info.name} · Stock · 15-min Delayed</div>
               </div>
               {signal && rc && (
                 <span style={{ background: rc.bg, color: rc.color, border: `1px solid ${rc.border}`, borderRadius: '6px', padding: '6px 14px', fontSize: '13px', fontWeight: '700' }}>
@@ -113,21 +129,30 @@ export default function StockSymbolPage({ params }) {
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               {price ? (
-                [
-                  { label: 'Bid', value: `$${parseFloat(price.bid).toFixed(info.decimals)}`, color: '#e05555' },
-                  { label: 'Ask', value: `$${parseFloat(price.ask).toFixed(info.decimals)}`, color: '#1D9E75' },
-                  { label: 'Spread', value: price.spread, color: '#64748b' },
-                ].map(item => (
-                  <div key={item.label} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>{item.label}</div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: item.color, fontFamily: 'monospace' }}>{item.value}</div>
+                <>
+                  <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', minWidth: '110px' }}>
+                    <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Price</div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#f1f5f9', fontFamily: 'monospace' }}>${price.price.toFixed(info.decimals)}</div>
                   </div>
-                ))
+                  <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', minWidth: '90px' }}>
+                    <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Change</div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: changeColor(price.change), fontFamily: 'monospace' }}>
+                      {price.change >= 0 ? '+' : ''}{price.change.toFixed(2)}
+                    </div>
+                  </div>
+                  <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', minWidth: '90px' }}>
+                    <div style={{ fontSize: '10px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Change %</div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: changeColor(price.change), fontFamily: 'monospace' }}>
+                      {price.changePercent >= 0 ? '+' : ''}{price.changePercent.toFixed(2)}%
+                    </div>
+                  </div>
+                </>
               ) : (
-                <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '12px 18px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Live Data</div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>Coming soon</div>
-                </div>
+                <>
+                  <PriceBoxSkeleton label="Price" />
+                  <PriceBoxSkeleton label="Change" />
+                  <PriceBoxSkeleton label="Change %" />
+                </>
               )}
             </div>
           </div>
