@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
 import Link from "next/link";
-import Script from "next/script";
 import Footer from "../components/Footer";
 import "./globals.css";
 
@@ -91,11 +90,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
-        <Script
+        {/* AdSense script — raw script tag so Google's verification crawler finds it in initial HTML */}
+        <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </head>
       <body className="min-h-full flex flex-col bg-[#080d14] text-[#c8dce8]">
