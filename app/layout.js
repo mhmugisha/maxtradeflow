@@ -11,6 +11,9 @@ const inter = Inter({
 // AdSense publisher ID. Loaded site-wide for verification + future ad units.
 const ADSENSE_CLIENT_ID = "ca-pub-5322514100378472";
 
+// Google Analytics 4 Measurement ID.
+const GA_MEASUREMENT_ID = "G-D424W4VZBG";
+
 export const metadata = {
   title: "MaxTradeFlow - AI-Powered Market Analysis",
   description: "Real trading signals from Smart Asset Bot API. Updated every hour.",
@@ -90,6 +93,22 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
+        {/* Google Analytics 4 — raw script tags so Google's crawler finds them in initial HTML */}
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}');
+            `,
+          }}
+        />
+
         {/* AdSense script — raw script tag so Google's verification crawler finds it in initial HTML */}
         <script
           async
