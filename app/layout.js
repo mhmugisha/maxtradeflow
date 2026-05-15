@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import Link from "next/link";
+import Footer from "../components/Footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -89,7 +90,7 @@ export default function RootLayout({ children }) {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111e2e] border-b border-[#1a2e42] px-4 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-8">
-              <div className="text-[#60c8d4] font-bold text-xl">MaxTradeFlow</div>
+              <Link href="/" className="text-[#60c8d4] font-bold text-xl">MaxTradeFlow</Link>
             </div>
             <div className="hidden md:flex items-center space-x-1">
               <Link href="/forex" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Forex</Link>
@@ -120,6 +121,7 @@ export default function RootLayout({ children }) {
         <main style={{ flex: 1, paddingTop: '92px' }}>
           {children}
         </main>
+        <Footer />
       </body>
     </html>
   );
