@@ -33,7 +33,7 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-[#f1f5f9] mb-3">2. Nature of the service</h2>
         <p className="leading-relaxed mb-3">
-          MaxTradeFlow is a free, personal project operated by Mark Hilary. It publishes educational content, market data, and AI-generated technical signals from the Smart Asset Bot — an automated system that scans technical indicators across forex, indices, commodities, crypto, and stock instruments.
+          MaxTradeFlow is a free, personal project operated by Mark Hillary. It publishes educational content, market data, and AI-generated technical signals from the Smart Asset Bot — an automated system that scans technical indicators across forex, indices, commodities, crypto, and stock instruments.
         </p>
         <p className="leading-relaxed">
           All signals, scores, analyses, and articles are produced algorithmically or for educational illustration. They are not personalized recommendations and do not consider your individual financial situation, objectives, or risk tolerance.
@@ -43,7 +43,7 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-[#f1f5f9] mb-3">3. Not financial advice</h2>
         <p className="leading-relaxed mb-3">
-          Mark Hilary is not a licensed financial advisor, broker, or investment professional. Content on MaxTradeFlow is provided for informational and educational purposes only.
+          Mark Hillary is not a licensed financial advisor, broker, or investment professional. Content on MaxTradeFlow is provided for informational and educational purposes only.
         </p>
         <p className="leading-relaxed">
           Before making any trading or investment decision, consult a qualified financial professional and conduct your own independent research.
@@ -70,7 +70,7 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-[#f1f5f9] mb-3">6. Limitation of liability</h2>
         <p className="leading-relaxed">
-          To the maximum extent permitted by law, Mark Hilary and MaxTradeFlow shall not be liable for any direct, indirect, incidental, consequential, or special damages arising from your use of the site — including but not limited to trading losses, missed opportunities, data inaccuracies, or service interruptions.
+          To the maximum extent permitted by law, Mark Hillary and MaxTradeFlow shall not be liable for any direct, indirect, incidental, consequential, or special damages arising from your use of the site — including but not limited to trading losses, missed opportunities, data inaccuracies, or service interruptions.
         </p>
       </section>
 

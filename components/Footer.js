@@ -59,7 +59,7 @@ export default function Footer() {
         {/* Bottom row */}
         <div className="border-t border-[#1a2e42] pt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div className="text-xs text-[#3a6070]">
-            © {year} MaxTradeFlow · Built by Mark Hilary
+            © {year} MaxTradeFlow · Built by Mark Hillary
           </div>
           <div className="text-xs text-[#3a6070]">
             Powered by Next.js · Hosted on Vercel · Data from Smart Asset Bot, Finnhub & TradingView

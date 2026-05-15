@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "About · MaxTradeFlow",
-  description: "MaxTradeFlow is a free, AI-powered market analysis platform built by Mark Hilary.",
+  description: "MaxTradeFlow is a free, AI-powered market analysis platform built by Mark Hillary.",
 };
 
 export default function AboutPage() {
@@ -50,7 +50,7 @@ export default function AboutPage() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-[#f1f5f9] mb-3">Who built this</h2>
         <p className="leading-relaxed mb-3">
-          MaxTradeFlow is built and maintained by <span className="text-[#f1f5f9] font-medium">Mark Hilary</span>, a developer and entrepreneur based in Uganda. The site is one of several independent projects he runs alongside property management software and writing.
+          MaxTradeFlow is built and maintained by <span className="text-[#f1f5f9] font-medium">Mark Hillary</span>, a developer and entrepreneur based in Uganda. The site is one of several independent projects he runs alongside property management software and writing.
         </p>
         <p className="leading-relaxed">
           The platform is an evolving experiment. Features are added when they make the site more useful, and removed when they don&apos;t. If something seems broken or could be better, the <Link href="/contact" className="text-[#60c8d4] hover:underline">contact form</Link> goes straight to him.

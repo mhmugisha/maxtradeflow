@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold text-[#f1f5f9] mb-3">1. Overview</h2>
         <p className="leading-relaxed mb-3">
-          MaxTradeFlow.com is a personal project operated by Mark Hilary as a free, educational resource for traders.
+          MaxTradeFlow.com is a personal project operated by Mark Hillary as a free, educational resource for traders.
           This Privacy Policy explains what limited information we collect, how it is used, and the third-party services involved when you visit the site.
         </p>
         <p className="leading-relaxed">
