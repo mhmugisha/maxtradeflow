@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../lib/api';
+import { getUpcomingEvents, formatEventTime, formatCountdown } from '../lib/featured-events';
 
 export default function Home() {
   const [prices, setPrices] = useState([]);
@@ -115,6 +116,69 @@ export default function Home() {
         </div>
       </section>
 
+
+      {/* Economic Calendar + Event Explainers */}
+      <section style={{ padding: '48px 24px', background: '#080d14' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+            {(() => {
+              const events = getUpcomingEvents();
+              return (
+                <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', color: '#60c8d4', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>This Week</div>
+                    <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>Economic Calendar</h3>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                    {events.map((evt, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#080d14', border: '1px solid #1a2535', borderRadius: '6px' }}>
+                        <div>
+                          <div style={{ color: '#f1f5f9', fontSize: '13px', fontWeight: '500' }}>{evt.flag}&nbsp;&nbsp;{evt.code} {evt.name}</div>
+                          <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>{formatEventTime(evt.datetime)}</div>
+                        </div>
+                        <span style={{ background: '#e0555520', color: '#e05555', border: '1px solid #e0555540', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: '700' }}>{evt.impact}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/economic-calendar" style={{ color: '#60c8d4', fontSize: '13px', textDecoration: 'none', textAlign: 'right', marginBottom: '14px' }}>See full calendar →</Link>
+                  {events.length > 0 && (
+                    <div style={{ marginTop: 'auto', background: '#60c8d420', border: '1px solid #60c8d440', borderRadius: '6px', padding: '10px 12px' }}>
+                      <div style={{ color: '#60c8d4', fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '4px' }}>⚡ Next Major Event</div>
+                      <div style={{ color: '#f1f5f9', fontSize: '13px', fontWeight: '600' }}>
+                        {events[0].flag} {events[0].code} {events[0].short} · {formatCountdown(events[0].datetime)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            <div style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', color: '#60c8d4', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>Learn The Events</div>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>Event Explainers</h3>
+              </div>
+              <Link href="/education/cpi-explained" style={{ textDecoration: 'none', marginBottom: '14px' }}>
+                <div style={{ background: '#080d14', border: '1px solid #1a2535', borderRadius: '8px', padding: '16px', cursor: 'pointer', transition: 'border-color 0.2s' }}>
+                  <div style={{ color: '#60c8d4', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>📖 Featured</div>
+                  <div style={{ color: '#f1f5f9', fontSize: '14px', fontWeight: '600', marginBottom: '6px', lineHeight: '1.4' }}>What CPI Means for the USD and Global Markets</div>
+                  <div style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>A trader's guide to inflation data and how it moves currencies, indices, gold, and crypto.</div>
+                </div>
+              </Link>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '14px' }}>
+                <Link href="/education/nfp-explained" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #1a2535' }}>
+                  <span style={{ color: '#c8dce8', fontSize: '13px' }}>Understanding NFP &amp; the USD</span>
+                  <span style={{ color: '#60c8d4', fontSize: '13px' }}>→</span>
+                </Link>
+                <Link href="/education/fomc-explained" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
+                  <span style={{ color: '#c8dce8', fontSize: '13px' }}>FOMC: How Rate Decisions Move Markets</span>
+                  <span style={{ color: '#60c8d4', fontSize: '13px' }}>→</span>
+                </Link>
+              </div>
+              <Link href="/education" style={{ marginTop: 'auto', color: '#60c8d4', fontSize: '13px', textDecoration: 'none', textAlign: 'right' }}>See all explainers →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Latest Signal Articles */}
       <section style={{ padding: '48px 24px', background: '#0d1520', borderTop: '1px solid #1a2535' }}>
