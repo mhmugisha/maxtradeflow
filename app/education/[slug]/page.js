@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getArticleBySlug, getRecentArticles } from '../../../lib/articles';
+import { getArticleBySlug, getRecentArticles, getArticlesByTag } from '../../../lib/articles';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -17,6 +17,8 @@ export default async function EducationArticlePage({ params }) {
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
   
+  const isEventExplainer = Array.isArray(article.tags) && article.tags.includes("event-explainer");
+  const eventExplainers = isEventExplainer ? await getArticlesByTag("event-explainer", slug, 4) : [];
   const recentArticles = await getRecentArticles(4);
   const related = recentArticles.filter(a => a.slug !== slug).slice(0, 3);
 
@@ -76,27 +78,60 @@ export default async function EducationArticlePage({ params }) {
         </main>
 
         <aside>
-          <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Tool Guides</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>How the scoring system works</Link>
-              <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>Sweep vs standard entries</Link>
-              <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>Stop loss logic explained</Link>
-              <Link href="/education" style={{ fontSize: '13px', color: '#60c8d4', textDecoration: 'none' }}>All Education Articles →</Link>
-            </div>
-          </div>
-
-          <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px' }}>
-            <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Recent Articles</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {related.map(art => (
-                <Link key={art.slug} href={'/education/' + art.slug} style={{ textDecoration: 'none' }}>
-                  <div style={{ fontSize: '11px', color: '#60c8d4', marginBottom: '2px' }}>{art.category.toUpperCase()}</div>
-                  <div style={{ fontSize: '13px', color: '#c8dce8', lineHeight: '1.4' }}>{art.title}</div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          {isEventExplainer ? (
+            <>
+              {eventExplainers.length > 0 && (
+                <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Related Events</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {eventExplainers.map(art => (
+                      <Link key={art.slug} href={'/education/' + art.slug} style={{ textDecoration: 'none' }}>
+                        <div style={{ fontSize: '13px', color: '#c8dce8', fontWeight: '500', lineHeight: '1.4', marginBottom: '2px' }}>{art.title}</div>
+                        <div style={{ fontSize: '11px', color: '#3a6070' }}>{Math.ceil(art.content.replace(/<[^>]*>/g, '').split(' ').length / 200)} min read</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Useful Tools</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Link href="/tools/position-size" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>→ Position Size Calculator</Link>
+                  <Link href="/tools/risk-reward" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>→ Risk/Reward Calculator</Link>
+                  <Link href="/tools/atr-volatility" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>→ ATR Volatility</Link>
+                  <Link href="/tools" style={{ fontSize: '13px', color: '#60c8d4', textDecoration: 'none', marginTop: '4px' }}>All Tools →</Link>
+                </div>
+              </div>
+              <div style={{ background: '#1a3a4a30', border: '1px solid #60c8d440', borderRadius: '12px', padding: '20px' }}>
+                <h3 style={{ fontSize: '13px', color: '#60c8d4', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Economic Calendar</h3>
+                <p style={{ fontSize: '13px', color: '#c8dce8', lineHeight: '1.5', marginBottom: '12px' }}>See upcoming high-impact events and time your trades.</p>
+                <Link href="/economic-calendar" style={{ fontSize: '13px', color: '#60c8d4', textDecoration: 'none', fontWeight: '500' }}>View calendar →</Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Tool Guides</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>How the scoring system works</Link>
+                  <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>Sweep vs standard entries</Link>
+                  <Link href="/guides" style={{ fontSize: '13px', color: '#c8dce8', textDecoration: 'none' }}>Stop loss logic explained</Link>
+                  <Link href="/education" style={{ fontSize: '13px', color: '#60c8d4', textDecoration: 'none' }}>All Education Articles →</Link>
+                </div>
+              </div>
+              <div style={{ background: '#111e2e', border: '0.5px solid #1a2e42', borderRadius: '12px', padding: '20px' }}>
+                <h3 style={{ fontSize: '13px', color: '#3a6070', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Recent Articles</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {related.map(art => (
+                    <Link key={art.slug} href={'/education/' + art.slug} style={{ textDecoration: 'none' }}>
+                      <div style={{ fontSize: '11px', color: '#60c8d4', marginBottom: '2px' }}>{art.category.toUpperCase()}</div>
+                      <div style={{ fontSize: '13px', color: '#c8dce8', lineHeight: '1.4' }}>{art.title}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </aside>
 
       </div>
