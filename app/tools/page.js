@@ -71,7 +71,6 @@ const tools = [
   },
 ]
 
-const categories = ['All', 'Risk Management', 'Forex', 'Calculators', 'Market Analysis', 'Tools']
 
 export default function ToolsPage() {
   return (
@@ -100,26 +99,8 @@ export default function ToolsPage() {
           </p>
         </div>
       </div>
-
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-        {/* Category Tabs */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '32px' }}>
-          {categories.map((cat, i) => (
-            <button key={cat} style={{
-              padding: '8px 18px',
-              borderRadius: '6px',
-              border: i === 0 ? 'none' : '1px solid #1a2535',
-              background: i === 0 ? '#60c8d4' : 'transparent',
-              color: i === 0 ? '#080d14' : '#94a3b8',
-              fontSize: '13px',
-              fontWeight: i === 0 ? '600' : '400',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}>
-              {cat}
-            </button>
-          ))}
-        </div>
+
 
         {/* Tools Grid */}
         <div style={{
