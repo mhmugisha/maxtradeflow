@@ -85,7 +85,7 @@ export default function Home() {
             {' '}& Analysis
           </h1>
           <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '32px', maxWidth: '560px', margin: '0 auto 32px', lineHeight: '1.6' }}>
-            Real-time signals from Smart Asset Bot. Live screener across 15 instruments. No opinion — just data.
+            Real-time signals from Smart Asset Bot. Continuous market scanning across forex, indices, commodities, and crypto. No opinion — just data.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/articles" style={{ textDecoration: 'none' }}>
@@ -115,37 +115,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Live Signal Scores */}
-      <section style={{ padding: '48px 24px', background: '#080d14' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>Live Signal Scores</h2>
-            <Link href="/articles" style={{ color: '#60c8d4', fontSize: '13px', textDecoration: 'none' }}>View all signals →</Link>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
-            {screener.map((signal, index) => (
-              <div key={index} style={{ background: '#0d1520', border: '1px solid #1a2535', borderRadius: '8px', padding: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '700', color: '#f1f5f9', fontSize: '14px' }}>{signal.symbol}</span>
-                  <span style={{
-                    padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '700',
-                    background: signal.action === 'TRADE' ? '#1D9E7520' : signal.action === 'WATCH' ? '#EF9F2720' : '#e0555520',
-                    color: signal.action === 'TRADE' ? '#1D9E75' : signal.action === 'WATCH' ? '#EF9F27' : '#e05555',
-                    border: `1px solid ${signal.action === 'TRADE' ? '#1D9E7540' : signal.action === 'WATCH' ? '#EF9F2740' : '#e0555540'}`,
-                  }}>
-                    {signal.action}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  <span style={{ color: signal.direction === 'LONG' ? '#1D9E75' : '#e05555' }}>{signal.direction}</span>
-                  {' · '}Score {signal.score}
-                </div>
-                <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>ADX {signal.adx}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Latest Signal Articles */}
       <section style={{ padding: '48px 24px', background: '#0d1520', borderTop: '1px solid #1a2535' }}>
