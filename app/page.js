@@ -103,6 +103,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Live Price Ticker */}
+      <section style={{ background: '#0d1520', padding: '12px 0', borderBottom: '1px solid #1a2535', overflow: 'hidden' }}>
+        <div className="animate-scroll" style={{ display: 'flex', gap: '32px', whiteSpace: 'nowrap' }}>
+          {[...prices, ...prices].slice(0, 30).map((price, index) => (
+            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px' }}>
+              <span style={{ color: '#94a3b8', fontWeight: '600' }}>{price.symbol}</span>
+              <span style={{ color: '#60c8d4', fontFamily: 'monospace' }}>{price.bid}</span>
+              <span style={{ color: '#1a2535' }}>|</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
       {/* Economic Calendar + Event Explainers */}
       <section style={{ padding: '48px 24px', background: '#080d14' }}>

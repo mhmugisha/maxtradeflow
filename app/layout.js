@@ -1,7 +1,6 @@
 import { Inter } from "next/font/google";
 import Link from "next/link";
 import Footer from "../components/Footer";
-import PriceTicker from "../components/PriceTicker";
 import "./globals.css";
 
 const inter = Inter({
@@ -149,7 +148,6 @@ export default function RootLayout({ children }) {
             </button>
           </div>
         </nav>
-        <PriceTicker />
         <SessionBar />
         <main style={{ flex: 1, paddingTop: '92px' }}>
           {children}
