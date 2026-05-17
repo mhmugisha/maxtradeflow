@@ -76,6 +76,7 @@ function ToolsDropdown() {
           <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Market Utilities</p>
           <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Session Time Converter</Link>
           <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Currency Strength</Link>
+          <Link href="/economic-calendar" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Economic Calendar</Link>
           <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">ORB Range Calculator</Link>
         </div>
         <div className="border-t border-[#1a2e42] pt-3">
