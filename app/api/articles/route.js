@@ -17,7 +17,9 @@ export async function GET(request) {
       articles = await sql`
         SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at, entry_price, stop_loss, take_profit, rr_ratio
         FROM articles
-        WHERE published = true AND category = ${category}
+        WHERE published = true
+          AND category = ${category}
+          AND (is_valid IS NULL OR is_valid = true)
         ORDER BY created_at DESC
         LIMIT ${limit}
       `;
@@ -26,6 +28,7 @@ export async function GET(request) {
         SELECT id, slug, title, ticker, category, rating, score, excerpt, created_at, entry_price, stop_loss, take_profit, rr_ratio
         FROM articles
         WHERE published = true
+          AND (is_valid IS NULL OR is_valid = true)
         ORDER BY created_at DESC
         LIMIT ${limit}
       `;

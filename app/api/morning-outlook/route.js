@@ -21,7 +21,9 @@ export async function POST(request) {
     const sql = getDb();
     const recentSignals = await sql`
       SELECT ticker, direction, score, adx FROM articles 
-      WHERE category = 'signal' AND published = true 
+      WHERE category = 'signal'
+        AND published = true
+        AND (is_valid IS NULL OR is_valid = true)
       ORDER BY created_at DESC LIMIT 10
     `;
 
