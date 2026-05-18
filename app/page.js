@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchPrices, fetchScreener } from '../lib/api';
+import { formatPrice } from '../lib/formatPrice';
 import { getUpcomingEvents, formatEventTime, formatCountdown } from '../lib/featured-events';
 
 export default function Home() {
@@ -204,6 +205,34 @@ export default function Home() {
                     </span>
                   </div>
                   <h3 style={{ color: '#f1f5f9', fontSize: '14px', fontWeight: '600', margin: '0 0 8px', lineHeight: '1.4' }}>{article.title}</h3>
+                  {(article.entry_price || article.stop_loss || article.take_profit || article.rr_ratio) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px' }}>
+                      {article.entry_price && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>Entry</span>
+                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{formatPrice(article.entry_price, article.ticker)}</span>
+                        </div>
+                      )}
+                      {article.rr_ratio && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>R:R</span>
+                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{`1:${parseFloat(article.rr_ratio).toFixed(2)}`}</span>
+                        </div>
+                      )}
+                      {article.stop_loss && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>SL</span>
+                          <span style={{ color: '#e05555', fontWeight: '500' }}>{formatPrice(article.stop_loss, article.ticker)}</span>
+                        </div>
+                      )}
+                      {article.take_profit && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>TP</span>
+                          <span style={{ color: '#1D9E75', fontWeight: '500' }}>{formatPrice(article.take_profit, article.ticker)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
                     <span>{formatDate(article.created_at)}</span>
                     <span>{article.score}/10</span>
