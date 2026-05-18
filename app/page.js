@@ -240,8 +240,12 @@ export default function Home() {
                 </div>
               </Link>
             )) : (
-              <div style={{ gridColumn: '1/-1', color: '#64748b', fontSize: '14px', padding: '20px 0' }}>
-                Signals are auto-published when the bot fires. Check back soon.
+              <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ maxWidth: '600px', width: '100%', background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '40px 24px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px', lineHeight: '1' }}>📡</div>
+                  <p style={{ color: '#f1f5f9', fontSize: '15px', fontWeight: '500', margin: '0 0 6px 0' }}>Waiting for the next qualifying setup</p>
+                  <p style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6', margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>The bot scans markets continuously. Signals appear here when high-conviction trades emerge.</p>
+                </div>
               </div>
             )}
           </div>
