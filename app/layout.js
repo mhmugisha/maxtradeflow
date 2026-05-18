@@ -66,24 +66,18 @@ function ToolsDropdown() {
       <div className="px-4">
         <div className="mb-4">
           <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Trading Calculators</p>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Position Size</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Risk:Reward</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Pip Calculator</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Margin Calculator</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">ATR Volatility</Link>
-        </div>
-        <div className="border-t border-[#1a2e42] pt-3 mb-4">
-          <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Market Utilities</p>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Session Time Converter</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Currency Strength</Link>
-          <Link href="/economic-calendar" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Economic Calendar</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">ORB Range Calculator</Link>
+          <Link href="/tools/position-size" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Position Size</Link>
+          <Link href="/tools/risk-reward" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Risk:Reward</Link>
+          <Link href="/tools/pip-calculator" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Pip Calculator</Link>
+          <Link href="/tools/margin-calculator" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Margin Calculator</Link>
+          <Link href="/tools/atr-volatility" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">ATR Volatility</Link>
+          <Link href="/tools/compound-interest" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Compound Interest</Link>
+          <Link href="/tools/profit-loss" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Profit/Loss</Link>
         </div>
         <div className="border-t border-[#1a2e42] pt-3">
-          <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Guides</p>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Scoring System</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Sweep vs Standard</Link>
-          <Link href="#" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Stop Loss Logic</Link>
+          <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Market Utilities</p>
+          <Link href="/tools/session-converter" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Session Time Converter</Link>
+          <Link href="/economic-calendar" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Economic Calendar</Link>
         </div>
       </div>
     </div>
