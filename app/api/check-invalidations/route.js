@@ -1,9 +1,13 @@
-// TODO: Add shared-secret auth before high-traffic phase. Currently open POST.
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
 export async function POST(request) {
   try {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== 'Bearer ' + process.env.CHECK_INVALIDATIONS_SECRET) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let body;
     try {
       body = await request.json();
