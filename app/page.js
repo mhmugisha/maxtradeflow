@@ -104,6 +104,77 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Latest Signal Articles */}
+      <section style={{ padding: '48px 24px', background: '#0d1520', borderTop: '1px solid #1a2535' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#60c8d4', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>Auto-published by Smart Asset Bot</div>
+              <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>Latest Market Signals</h2>
+            </div>
+            <Link href="/articles" style={{ color: '#60c8d4', fontSize: '13px', textDecoration: 'none' }}>All signals →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            {recentSignals.length > 0 ? recentSignals.map((article, i) => (
+              <Link key={i} href={`/articles/${article.slug}`} style={{ textDecoration: 'none' }}>
+                <div style={{ background: '#080d14', border: '1px solid #1a2535', borderRadius: '10px', padding: '20px', cursor: 'pointer', transition: 'border-color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#60c8d4'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = '#1a2535'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ color: '#60c8d4', fontSize: '13px', fontWeight: '700' }}>{article.ticker}</span>
+                    <span style={{ background: '#1D9E7520', color: '#1D9E75', border: '1px solid #1D9E7540', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: '700' }}>
+                      {article.rating || 'TRADE'}
+                    </span>
+                  </div>
+                  <h3 style={{ color: '#f1f5f9', fontSize: '14px', fontWeight: '600', margin: '0 0 8px', lineHeight: '1.4' }}>{article.title}</h3>
+                  {(article.entry_price || article.stop_loss || article.take_profit || article.rr_ratio) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px' }}>
+                      {article.entry_price && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>Entry</span>
+                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{formatPrice(article.entry_price, article.ticker)}</span>
+                        </div>
+                      )}
+                      {article.rr_ratio && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>R:R</span>
+                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{`1:${parseFloat(article.rr_ratio).toFixed(2)}`}</span>
+                        </div>
+                      )}
+                      {article.stop_loss && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>SL</span>
+                          <span style={{ color: '#e05555', fontWeight: '500' }}>{formatPrice(article.stop_loss, article.ticker)}</span>
+                        </div>
+                      )}
+                      {article.take_profit && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
+                          <span style={{ color: '#3a6070' }}>TP</span>
+                          <span style={{ color: '#1D9E75', fontWeight: '500' }}>{formatPrice(article.take_profit, article.ticker)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
+                    <span>{formatDate(article.created_at)}</span>
+                    <span>{article.score}/10</span>
+                  </div>
+                </div>
+              </Link>
+            )) : (
+              <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ maxWidth: '600px', width: '100%', background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '40px 24px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px', lineHeight: '1' }}>📡</div>
+                  <p style={{ color: '#f1f5f9', fontSize: '15px', fontWeight: '500', margin: '0 0 6px 0' }}>Waiting for the next qualifying setup</p>
+                  <p style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6', margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>The bot scans markets continuously. Signals appear here when high-conviction trades emerge.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Live Price Ticker */}
       <section style={{ background: '#0d1520', padding: '12px 0', borderBottom: '1px solid #1a2535', overflow: 'hidden' }}>
         <div className="animate-scroll" style={{ display: 'flex', gap: '32px', whiteSpace: 'nowrap' }}>
@@ -177,77 +248,6 @@ export default function Home() {
               </div>
               <Link href="/education" style={{ marginTop: 'auto', color: '#60c8d4', fontSize: '13px', textDecoration: 'none', textAlign: 'right' }}>See all explainers →</Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Latest Signal Articles */}
-      <section style={{ padding: '48px 24px', background: '#0d1520', borderTop: '1px solid #1a2535' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: '#60c8d4', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>Auto-published by Smart Asset Bot</div>
-              <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#f1f5f9', margin: 0 }}>Latest Market Signals</h2>
-            </div>
-            <Link href="/articles" style={{ color: '#60c8d4', fontSize: '13px', textDecoration: 'none' }}>All signals →</Link>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {recentSignals.length > 0 ? recentSignals.map((article, i) => (
-              <Link key={i} href={`/articles/${article.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: '#080d14', border: '1px solid #1a2535', borderRadius: '10px', padding: '20px', cursor: 'pointer', transition: 'border-color 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#60c8d4'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#1a2535'}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <span style={{ color: '#60c8d4', fontSize: '13px', fontWeight: '700' }}>{article.ticker}</span>
-                    <span style={{ background: '#1D9E7520', color: '#1D9E75', border: '1px solid #1D9E7540', borderRadius: '4px', padding: '2px 8px', fontSize: '10px', fontWeight: '700' }}>
-                      {article.rating || 'TRADE'}
-                    </span>
-                  </div>
-                  <h3 style={{ color: '#f1f5f9', fontSize: '14px', fontWeight: '600', margin: '0 0 8px', lineHeight: '1.4' }}>{article.title}</h3>
-                  {(article.entry_price || article.stop_loss || article.take_profit || article.rr_ratio) && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '10px' }}>
-                      {article.entry_price && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
-                          <span style={{ color: '#3a6070' }}>Entry</span>
-                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{formatPrice(article.entry_price, article.ticker)}</span>
-                        </div>
-                      )}
-                      {article.rr_ratio && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
-                          <span style={{ color: '#3a6070' }}>R:R</span>
-                          <span style={{ color: '#60c8d4', fontWeight: '500' }}>{`1:${parseFloat(article.rr_ratio).toFixed(2)}`}</span>
-                        </div>
-                      )}
-                      {article.stop_loss && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
-                          <span style={{ color: '#3a6070' }}>SL</span>
-                          <span style={{ color: '#e05555', fontWeight: '500' }}>{formatPrice(article.stop_loss, article.ticker)}</span>
-                        </div>
-                      )}
-                      {article.take_profit && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '6px 8px', background: '#0d1520', borderRadius: '4px' }}>
-                          <span style={{ color: '#3a6070' }}>TP</span>
-                          <span style={{ color: '#1D9E75', fontWeight: '500' }}>{formatPrice(article.take_profit, article.ticker)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '12px' }}>
-                    <span>{formatDate(article.created_at)}</span>
-                    <span>{article.score}/10</span>
-                  </div>
-                </div>
-              </Link>
-            )) : (
-              <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center' }}>
-                <div style={{ maxWidth: '600px', width: '100%', background: '#0d1520', border: '1px solid #1a2535', borderRadius: '10px', padding: '40px 24px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '12px', lineHeight: '1' }}>📡</div>
-                  <p style={{ color: '#f1f5f9', fontSize: '15px', fontWeight: '500', margin: '0 0 6px 0' }}>Waiting for the next qualifying setup</p>
-                  <p style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6', margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>The bot scans markets continuously. Signals appear here when high-conviction trades emerge.</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
