@@ -72,8 +72,9 @@ body {
   position: relative;
 }
 
+/* Visibility is controlled by React state in components/ToolsNav.js
+   (hover-open with a ~200ms close delay). These rules only style the panel. */
 .tools-dropdown {
-  display: none;
   position: absolute;
   top: 100%;
   left: 0;
@@ -85,10 +86,6 @@ body {
   width: 16rem;
   margin-top: 0.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-}
-
-.tools-dropdown-container:hover .tools-dropdown {
-  display: block;
 }
 
 .tools-dropdown a {

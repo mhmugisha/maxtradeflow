@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import Link from "next/link";
 import Footer from "../components/Footer";
+import ToolsNav from "../components/ToolsNav";
 import "./globals.css";
 
 const inter = Inter({
@@ -60,30 +61,6 @@ function SessionBar() {
   );
 }
 
-function ToolsDropdown() {
-  return (
-    <div className="tools-dropdown hidden absolute top-full left-0 bg-[#111e2e] border border-[#1a2e42] rounded-lg py-3 z-100 w-64">
-      <div className="px-4">
-        <div className="mb-4">
-          <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Trading Calculators</p>
-          <Link href="/tools/position-size" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Position Size</Link>
-          <Link href="/tools/risk-reward" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Risk:Reward</Link>
-          <Link href="/tools/pip-calculator" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Pip Calculator</Link>
-          <Link href="/tools/margin-calculator" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Margin Calculator</Link>
-          <Link href="/tools/atr-volatility" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">ATR Volatility</Link>
-          <Link href="/tools/compound-interest" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Compound Interest</Link>
-          <Link href="/tools/profit-loss" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Profit/Loss</Link>
-        </div>
-        <div className="border-t border-[#1a2e42] pt-3">
-          <p className="text-xs uppercase text-[#3a6070] font-semibold mb-2">Market Utilities</p>
-          <Link href="/tools/session-converter" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Session Time Converter</Link>
-          <Link href="/economic-calendar" className="block text-sm text-[#c8dce8] hover:text-[#60c8d4] py-1">Economic Calendar</Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
@@ -128,10 +105,7 @@ export default function RootLayout({ children }) {
               <span className="text-[#3a6070]">·</span>
               <Link href="/stocks" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Stocks</Link>
               <span className="text-[#1a2e42] px-2">|</span>
-              <div className="relative tools-dropdown-container">
-                <button className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Tools</button>
-                <ToolsDropdown />
-              </div>
+              <ToolsNav />
               <span className="text-[#3a6070]">·</span>
               <Link href="/education" className="text-[#c8dce8] hover:text-[#60c8d4] transition-colors px-3 py-2">Education</Link>
               <span className="text-[#3a6070]">·</span>
