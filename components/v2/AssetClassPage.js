@@ -4,9 +4,9 @@
 // number traces to lib/v2-data.js or lib/market-sessions.js (§0.2).
 
 import Link from 'next/link';
-import { instrumentsByClass, formatInstrumentPrice, getInstrument, displayFor } from '@/lib/instruments';
+import { instrumentsByClass, formatInstrumentPrice } from '@/lib/instruments';
 import { getActiveSignals, getSignalCounts, getDailyChanges, getSparklines } from '@/lib/v2-data';
-import { classMeta } from './assetClassMeta';
+import { classMeta, l4Href } from './assetClassMeta';
 import Breadcrumb from './Breadcrumb';
 import MarketsSidebar from './MarketsSidebar';
 import InstrumentCardGrid from './InstrumentCardGrid';
@@ -128,7 +128,9 @@ export default async function AssetClassPage({ classKey }) {
         symbol: inst.symbol,
         display: inst.display,
         name: inst.name,
-        href: `/v2/markets/${classKey}/${inst.slug}`,
+        // Only the five built L4 pages link out; the rest render unlinked
+        // until the Phase B rollout (Session 3 decision).
+        href: l4Href(inst),
         price: formatInstrumentPrice(change?.price, inst.symbol),
         changePct: change?.changePct ?? null,
         spark: sparks[inst.symbol] ?? [],
@@ -194,10 +196,7 @@ export default async function AssetClassPage({ classKey }) {
               <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
                 {clsSignals.slice(0, 3).map((s) => (
                   <div key={s.signal_uid} className="w-64 shrink-0 snap-start md:w-auto">
-                    <SignalCard
-                      signal={s}
-                      href={`/v2/markets/${classKey}/${getInstrument(s.ticker)?.slug ?? ''}`}
-                    />
+                    <SignalCard signal={s} href={`/v2/signals/${s.signal_uid}`} />
                   </div>
                 ))}
               </div>

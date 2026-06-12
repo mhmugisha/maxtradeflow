@@ -36,10 +36,16 @@ function matches(card, filter) {
 function InstrumentCard({ card }) {
   const s = card.signal;
   const long = s?.direction === 'LONG';
+  // href is null for instruments without a built L4 page — those cards
+  // render unlinked rather than pointing at a 404.
+  const Wrapper = card.href ? Link : 'div';
+  const wrapperProps = card.href
+    ? { href: card.href }
+    : { title: 'Instrument page coming with the full L4 rollout' };
   return (
-    <Link
-      href={card.href}
-      className="relative block min-h-11 overflow-hidden rounded-md border border-v2-line bg-v2-surface p-3 transition-colors hover:border-v2-line-strong"
+    <Wrapper
+      {...wrapperProps}
+      className={`relative block min-h-11 overflow-hidden rounded-md border border-v2-line bg-v2-surface p-3 transition-colors ${card.href ? 'hover:border-v2-line-strong' : ''}`}
     >
       {/* corner triangle marks an active-signal card (mockup) */}
       {s && (
@@ -75,7 +81,7 @@ function InstrumentCard({ card }) {
           ● {s.direction} active
         </div>
       )}
-    </Link>
+    </Wrapper>
   );
 }
 

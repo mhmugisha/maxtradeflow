@@ -3,7 +3,7 @@
 // lib/v2-data.js (signals/price_snapshots) or lib/market-sessions.js (§0.2).
 
 import Link from 'next/link';
-import { INSTRUMENTS, instrumentsByClass, formatInstrumentPrice, displayFor, getInstrument } from '@/lib/instruments';
+import { INSTRUMENTS, instrumentsByClass, formatInstrumentPrice, displayFor } from '@/lib/instruments';
 import { getActiveSignals, getSignalCounts, getDailyChanges, getSparklineData } from '@/lib/v2-data';
 import { sessionStatuses } from '@/lib/market-sessions';
 import { ASSET_CLASSES } from '@/components/v2/assetClassMeta';
@@ -65,11 +65,6 @@ function classAggregates(signals, changes) {
 
     return { ...cls, count: clsSignals.length, avgScore, hasDerived, condition, best, trendPct };
   });
-}
-
-function instrumentHref(ticker) {
-  const inst = getInstrument(ticker);
-  return inst ? `/v2/markets/${inst.assetClass}/${inst.slug}` : '/v2/markets';
 }
 
 export default async function MarketsHubPage() {
@@ -267,7 +262,7 @@ export default async function MarketsHubPage() {
               <div className={`${SWIPE_ROW} md:grid-cols-4`}>
                 {signals.map((s) => (
                   <div key={s.signal_uid} className={SWIPE_CARD}>
-                    <SignalCard signal={s} classTag href={instrumentHref(s.ticker)} />
+                    <SignalCard signal={s} classTag href={`/v2/signals/${s.signal_uid}`} />
                   </div>
                 ))}
               </div>
