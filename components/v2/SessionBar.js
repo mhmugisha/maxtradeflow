@@ -17,12 +17,12 @@ export default function SessionBar() {
 
   return (
     <div
-      className="flex items-center justify-center gap-6 border-b border-v2-line bg-v2-bg px-4"
+      className="v2-no-scrollbar flex items-center gap-4 overflow-x-auto whitespace-nowrap border-b border-v2-line bg-v2-bg px-4 md:justify-center md:gap-6 md:overflow-visible"
       style={{ height: 'var(--v2-sessionbar-h)' }}
       suppressHydrationWarning
     >
       {statuses.map((s) => (
-        <div key={s.name} className="flex items-center gap-1.5 text-[11px]">
+        <div key={s.name} className="flex shrink-0 items-center gap-1.5 text-[10px] md:text-[11px]">
           <span
             className={`h-1.5 w-1.5 rounded-full ${s.open ? 'bg-v2-bullish' : 'bg-v2-text-faint'}`}
             aria-hidden

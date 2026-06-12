@@ -152,6 +152,16 @@ body:has([data-v2-shell]) > main {
   padding-top: 0 !important;
 }
 
+/* Horizontally scrollable strips (SessionBar on mobile) scroll without a
+ * visible scrollbar. */
+.v2-no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.v2-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* PriceTicker marquee: the track holds two copies of the row; -50% loops
  * seamlessly. Paused on hover so prices are readable. */
 @keyframes v2-marquee {
