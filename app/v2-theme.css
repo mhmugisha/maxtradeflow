@@ -88,6 +88,27 @@
 
 /* ── (v2) shell helpers ──────────────────────────────────────────────────── */
 
+/* Build-alongside chrome neutralization. The root app/layout.js wraps every
+ * route (Next.js offers no opt-out without moving existing files, which waits
+ * for the cutover session). On v2 routes — and ONLY there, because
+ * :has([data-v2-shell]) matches only while the (v2) layout is mounted — hide
+ * the legacy nav / session bar / footer and the legacy main padding. Inert on
+ * all existing pages, including after client-side navigation. DELETE at
+ * cutover together with the legacy chrome. */
+body:has([data-v2-shell]) > nav {
+  display: none;
+}
+body:has([data-v2-shell]) > div[style*='sticky'] {
+  /* legacy SessionBar (inline-styled sticky div in app/layout.js) */
+  display: none;
+}
+body:has([data-v2-shell]) > footer {
+  display: none;
+}
+body:has([data-v2-shell]) > main {
+  padding-top: 0 !important;
+}
+
 /* PriceTicker marquee: the track holds two copies of the row; -50% loops
  * seamlessly. Paused on hover so prices are readable. */
 @keyframes v2-marquee {
