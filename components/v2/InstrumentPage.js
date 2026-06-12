@@ -14,6 +14,7 @@ import {
   getInstrumentStatsGate, getArticleForSignal,
 } from '@/lib/v2-data';
 import { sessionStatuses } from '@/lib/market-sessions';
+import { stripMarkdownArtifacts } from '@/lib/sanitize-analysis';
 import { classMeta, l4Href } from './assetClassMeta';
 import Breadcrumb from './Breadcrumb';
 import MarketsSidebar from './MarketsSidebar';
@@ -84,6 +85,7 @@ export default async function InstrumentPage({ symbol }) {
 
   const change = changes[symbol] ?? null;
   const open = marketOpen(inst.assetClass);
+  const analysisExcerpt = stripMarkdownArtifacts(article?.excerpt);
 
   // 24h high/low from real bars only (falls back to closes when the bot
   // didn't record highs/lows); null → "—".
@@ -208,10 +210,10 @@ export default async function InstrumentPage({ symbol }) {
               )}
 
               {/* Analysis excerpt from the signal's article */}
-              {article?.excerpt && (
+              {analysisExcerpt && (
                 <section className="rounded-md border border-v2-line bg-v2-surface p-4">
                   <div className="mb-2 text-[10px] uppercase tracking-widest text-v2-text-faint">Analysis</div>
-                  <p className="text-sm leading-relaxed text-v2-text-muted">{article.excerpt}</p>
+                  <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
                   {journeySignal && (
                     <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="mt-2 inline-block text-xs text-v2-accent hover:underline">
                       Read full analysis →

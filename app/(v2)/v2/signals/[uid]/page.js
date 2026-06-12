@@ -10,7 +10,7 @@ import { getInstrument, formatInstrumentPrice, displayFor } from '@/lib/instrume
 import {
   getSignalByUid, getSignalEvents, getArticleForSignal, getSignalCounts, UUID_RE,
 } from '@/lib/v2-data';
-import { looksLikeHtml, sanitizeAnalysisHtml } from '@/lib/sanitize-analysis';
+import { looksLikeHtml, sanitizeAnalysisHtml, stripMarkdownArtifacts } from '@/lib/sanitize-analysis';
 import { classMeta, l4Href } from '@/components/v2/assetClassMeta';
 import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
@@ -88,6 +88,8 @@ export default async function SignalArticlePage({ params }) {
   const banner = STATUS_BANNER[signal.status] ?? STATUS_BANNER.GENERATED;
   const invalidation = events.find((e) => e.event_type === 'INVALIDATED')?.reason ?? null;
   const instrumentHref = l4Href(inst) ?? cls?.href ?? '/v2/markets';
+  const analysisBody = stripMarkdownArtifacts(article?.content);
+  const analysisExcerpt = stripMarkdownArtifacts(article?.excerpt);
 
   return (
     <>
@@ -195,21 +197,21 @@ export default async function SignalArticlePage({ params }) {
           <section>
             <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Analysis</h2>
             <div className="rounded-md border border-v2-line bg-v2-surface p-4">
-              {article?.content?.trim() ? (
-                looksLikeHtml(article.content) ? (
+              {analysisBody ? (
+                looksLikeHtml(analysisBody) ? (
                   <div
                     className="v2-prose"
-                    dangerouslySetInnerHTML={{ __html: sanitizeAnalysisHtml(article.content) }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeAnalysisHtml(analysisBody) }}
                   />
                 ) : (
                   <div className="v2-prose">
-                    {article.content.trim().split(/\n{2,}/).map((para, i) => (
+                    {analysisBody.split(/\n{2,}/).map((para, i) => (
                       <p key={i} className="whitespace-pre-line">{para}</p>
                     ))}
                   </div>
                 )
-              ) : article?.excerpt ? (
-                <p className="text-sm leading-relaxed text-v2-text-muted">{article.excerpt}</p>
+              ) : analysisExcerpt ? (
+                <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
               ) : (
                 <p className="text-sm text-v2-text-muted">No analysis was published for this signal.</p>
               )}
