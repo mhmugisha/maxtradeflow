@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ASSET_CLASSES } from './assetClassMeta';
 import { TOOLS as TOOL_PAGES } from './tools/toolsMeta';
@@ -98,6 +98,20 @@ function SidebarBody({ active, counts }) {
 
 export default function MarketsSidebar({ active = 'overview', counts = {} }) {
   const [open, setOpen] = useState(false);
+  // Mobile drawer button auto-hides while scrolling down so it never sits on
+  // top of the content being read, and reappears on the first scroll up.
+  const [buttonHidden, setButtonHidden] = useState(false);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setButtonHidden(y > lastY && y > 64);
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <>
@@ -109,13 +123,17 @@ export default function MarketsSidebar({ active = 'overview', counts = {} }) {
         <SidebarBody active={active} counts={counts} />
       </aside>
 
-      {/* Mobile: drawer */}
+      {/* Mobile: drawer. Compact circular trigger bottom-right, clear of the
+          fixed price ticker; auto-hides on scroll-down. */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-12 left-3 z-40 flex min-h-11 items-center gap-2 rounded-full border border-v2-line-strong bg-v2-surface px-4 text-sm text-v2-text shadow-lg md:hidden"
+        className={`fixed right-3 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-v2-line-strong bg-v2-surface text-lg text-v2-text shadow-lg transition-all duration-200 md:hidden ${
+          buttonHidden ? 'pointer-events-none translate-y-4 opacity-0' : ''
+        }`}
+        style={{ bottom: 'calc(var(--v2-ticker-h) + 0.75rem)' }}
         aria-label="Open markets menu"
       >
-        ☰ Markets
+        ☰
       </button>
       {open && (
         <div className="fixed inset-0 z-50 md:hidden">
