@@ -85,3 +85,20 @@
   font-family: var(--font-plex-mono), ui-monospace, 'SF Mono', monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── (v2) shell helpers ──────────────────────────────────────────────────── */
+
+/* PriceTicker marquee: the track holds two copies of the row; -50% loops
+ * seamlessly. Paused on hover so prices are readable. */
+@keyframes v2-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.v2-marquee {
+  display: flex;
+  width: max-content;
+  animation: v2-marquee 60s linear infinite;
+}
+.v2-marquee:hover {
+  animation-play-state: paused;
+}
