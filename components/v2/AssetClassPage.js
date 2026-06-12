@@ -13,6 +13,7 @@ import InstrumentCardGrid from './InstrumentCardGrid';
 import SignalCard from './SignalCard';
 import MarketDnaRadar from './MarketDnaRadar';
 import RiskDisclaimer from './RiskDisclaimer';
+import UpcomingEvents from './UpcomingEvents';
 
 const MAX_CARDS = 8; // two rows of four per the mockup
 
@@ -234,16 +235,22 @@ export default async function AssetClassPage({ classKey }) {
             </div>
           </section>
 
-          {/* ── Events placeholder (Session 4) ── */}
+          {/* ── Events affecting this class (curated seed — see lib/calendar-events.js) ── */}
           <section>
-            <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">
-              Events affecting {meta.name} this week
-            </h2>
-            <div className="rounded-md border border-dashed border-v2-line p-4 text-sm text-v2-text-faint">
-              Economic-calendar integration lands in Session 4. This section will list high-impact
-              events for {meta.name.toLowerCase()} instruments — intentionally empty until the real
-              data source exists.
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-v2-display text-base font-semibold text-v2-text">
+                Major scheduled events — {meta.name}
+              </h2>
+              <Link href="/v2/calendar" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">
+                Full calendar →
+              </Link>
             </div>
+            <UpcomingEvents
+              symbols={symbols}
+              days={14}
+              limit={5}
+              emptyText={`No major scheduled events for ${meta.name.toLowerCase()} instruments in the next 14 days.`}
+            />
           </section>
 
           <RiskDisclaimer variant="compact" />

@@ -11,6 +11,8 @@ import ClassCards from '@/components/v2/ClassCards';
 import SessionCards from '@/components/v2/SessionCards';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import LastUpdated from '@/components/v2/LastUpdated';
+import { getUpcomingEvents, getNextEvent } from '@/lib/calendar-events';
+import { ImpactBadge } from '@/components/v2/UpcomingEvents';
 
 export const revalidate = 60;
 
@@ -47,10 +49,18 @@ export default async function HomePage() {
     .slice(0, 4);
   const gateReady = (platformGate.stats?.sample_size ?? 0) >= 30;
 
+  const weekEvents = getUpcomingEvents({ days: 10, limit: 6 });
+  const nextEvent = getNextEvent();
+  const fmtEvent = (iso) => {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-12 px-4 py-10">
-      {/* ── Hero ── */}
-      <section>
+      {/* ── Hero (left: pitch, right: calendar card per the mockup) ── */}
+      <section className="grid gap-8 lg:grid-cols-[1fr_minmax(320px,420px)]">
+        <div>
         <p className="text-[11px] uppercase tracking-widest text-v2-accent">Smart Asset Bot — Live</p>
         <h1 className="mt-2 max-w-2xl font-v2-display text-3xl font-bold leading-tight text-v2-text md:text-4xl">
           AI-Powered <span className="text-v2-accent">Market Signals</span> &amp; Analysis
@@ -84,6 +94,41 @@ export default async function HomePage() {
               <span className="text-[11px] text-v2-text-faint">Market Pulse not yet computed — values appear when the bot publishes them.</span>
             )}
           </div>
+
+          {/* Next event bar (mockup) — curated seed, see lib/calendar-events.js */}
+          {nextEvent && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-v2-line bg-v2-surface px-3 py-2">
+              <span className="text-xs text-v2-text-muted">
+                <span className="text-v2-accent">●</span> Next event: <span className="text-v2-text">{nextEvent.title}</span>
+              </span>
+              <span className="v2-num rounded bg-v2-accent-soft px-2 py-0.5 text-[11px] text-v2-accent">{fmtEvent(nextEvent.datetime)}</span>
+            </div>
+          )}
+        </div>
+        </div>
+
+        {/* This Week — Economic Calendar card (curated seed) */}
+        <div className="rounded-md border border-v2-line bg-v2-surface p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-v2-text">Ahead — Major Scheduled Events</h2>
+            <Link href="/v2/calendar" className="text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">Full calendar →</Link>
+          </div>
+          {weekEvents.length === 0 ? (
+            <p className="text-xs text-v2-text-faint">No major scheduled events in the next 10 days.</p>
+          ) : (
+            <div className="divide-y divide-v2-line">
+              {weekEvents.map((e) => (
+                <div key={e.id} className="flex items-center justify-between gap-2 py-2" title={e.source}>
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-medium text-v2-text">{e.currency} {e.title}</div>
+                    <div className="v2-num text-[10px] text-v2-text-faint">{fmtEvent(e.datetime)}</div>
+                  </div>
+                  <ImpactBadge impact={e.impact} />
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="mt-2 text-[10px] text-v2-text-faint">Curated from official calendars — not a live feed.</p>
         </div>
       </section>
 

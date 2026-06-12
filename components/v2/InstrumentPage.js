@@ -23,6 +23,7 @@ import PriceChart from './PriceChart';
 import PctBadge from './PctBadge';
 import LastUpdated from './LastUpdated';
 import RiskDisclaimer from './RiskDisclaimer';
+import UpcomingEvents from './UpcomingEvents';
 
 // Factual instrument descriptions (task: what it is, sessions, drivers —
 // no hype). Extend when more L4 pages roll out.
@@ -354,9 +355,18 @@ export default async function InstrumentPage({ symbol }) {
                 </div>
               </section>
 
-              <div className="rounded-md border border-dashed border-v2-line p-3 text-[11px] text-v2-text-faint">
-                Upcoming economic events for {inst.display} land here in Session 4.
-              </div>
+              <section>
+                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">Upcoming scheduled events</h2>
+                <UpcomingEvents
+                  symbols={[symbol]}
+                  days={14}
+                  limit={3}
+                  emptyText={`No major scheduled events for ${inst.display} in the next 14 days.`}
+                />
+                <Link href="/v2/calendar" className="mt-2 inline-block text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">
+                  Full calendar →
+                </Link>
+              </section>
             </aside>
           </div>
         </div>

@@ -13,7 +13,7 @@ import { ASSET_CLASSES } from './assetClassMeta';
 const DISCOVER = [
   { label: 'All Signals', href: '/v2/signals' },
   { label: 'Sessions', href: '/v2/markets/sessions' },
-  { label: 'Calendar', href: '/v2/markets/economic-calendar' },
+  { label: 'Calendar', href: '/v2/calendar' },
 ];
 
 const TOOLS = [
