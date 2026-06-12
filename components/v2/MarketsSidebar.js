@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ASSET_CLASSES } from './assetClassMeta';
+import { TOOLS as TOOL_PAGES } from './tools/toolsMeta';
 
 const DISCOVER = [
   { label: 'All Signals', href: '/v2/signals' },
@@ -16,12 +17,13 @@ const DISCOVER = [
   { label: 'Calendar', href: '/v2/calendar' },
 ];
 
-const TOOLS = [
-  { label: 'Pip Calc', href: '/v2/tools/pip-calculator' },
-  { label: 'Position Size', href: '/v2/tools/position-size' },
-  { label: 'Risk/Reward', href: '/v2/tools/risk-reward' },
-  { label: 'Margin Calc', href: '/v2/tools/margin-calculator' },
-];
+// All 8 calculators, from the tools registry. Active key: `tools:<slug>`
+// (passed by ToolShell).
+const TOOLS = TOOL_PAGES.map((t) => ({
+  label: t.sidebarLabel,
+  href: `/v2/tools/${t.slug}`,
+  key: `tools:${t.slug}`,
+}));
 
 function SectionLabel({ children }) {
   return (
@@ -88,7 +90,7 @@ function SidebarBody({ active, counts }) {
 
       <SectionLabel>Tools</SectionLabel>
       {TOOLS.map((t) => (
-        <Item key={t.href} href={t.href} label={t.label} active={false} />
+        <Item key={t.href} href={t.href} label={t.label} active={active === t.key} />
       ))}
     </nav>
   );
