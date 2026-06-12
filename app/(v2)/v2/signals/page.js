@@ -8,6 +8,8 @@ import { displayFor, formatInstrumentPrice, instrumentsByClass } from '@/lib/ins
 import { getSignalsPage, getPlatformStatsGate } from '@/lib/v2-data';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import ArchiveFilters from './ArchiveFilters';
+import SignalRow from './SignalRow';
+import RepublishedGroup from './RepublishedGroup';
 
 export const metadata = {
   title: 'Signal Archive — Every Signal Ever Published — MaxTradeFlow',
@@ -31,6 +33,57 @@ const fmtWhen = (iso) => {
   const d = new Date(iso);
   return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit', timeZone: 'UTC' })} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
 };
+
+/** Precomputed display strings for one row (SignalRow is purely presentational). */
+function toDisplayRow(s) {
+  const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.GENERATED;
+  return {
+    href: `/v2/signals/${s.signal_uid}`,
+    when: fmtWhen(s.generated_at),
+    instrument: displayFor(s.ticker),
+    direction: s.direction,
+    dirCls: s.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish',
+    tfs: s.displayScore != null ? `${s.displayScore}${s.derived ? '*' : ''}` : '—',
+    tfsTitle: s.derived ? 'Derived from legacy 0–10 score' : undefined,
+    entry: formatInstrumentPrice(s.entry_price, s.ticker),
+    badgeLabel: badge.label,
+    badgeCls: badge.cls,
+    r: s.realizedR == null ? '—' : `${s.realizedR > 0 ? '+' : ''}${s.realizedR}R`,
+    rCls: s.realizedR == null ? 'text-v2-text-faint' : s.realizedR >= 0 ? 'text-v2-bullish' : 'text-v2-bearish',
+  };
+}
+
+const GROUP_WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * Display-layer grouping of the Jun 11 republication cluster (§0.2/§0.3: the
+ * rows stay in the record — they just read as one story). A row joins a group
+ * when the group's LAST row shares its ticker + direction + status and is
+ * within 60 minutes. Grouping is per instrument stream, not strictly
+ * adjacent rows: the Jun 11 bug republished BTCUSD and BNBUSD alternately
+ * (~2.5 min apart), so the two tickers' rows interleave and a strictly
+ * consecutive rule would never collapse them. A group renders at its newest
+ * member's position. Computed at render time from the fetched page only — no
+ * schema changes, no recounts, and a group that a pagination boundary splits
+ * simply groups what's on the page.
+ */
+function groupRepublished(rows) {
+  const groups = [];
+  const open = new Map(); // ticker|direction|status → most recent group
+  for (const s of rows) {
+    const key = `${s.ticker}|${s.direction}|${s.status}`;
+    const group = open.get(key);
+    const prev = group?.[group.length - 1];
+    if (prev && Math.abs(new Date(prev.generated_at) - new Date(s.generated_at)) <= GROUP_WINDOW_MS) {
+      group.push(s);
+    } else {
+      const next = [s];
+      groups.push(next);
+      open.set(key, next);
+    }
+  }
+  return groups;
+}
 
 export default async function SignalsArchivePage({ searchParams }) {
   const sp = await searchParams;
@@ -91,26 +144,18 @@ export default async function SignalsArchivePage({ searchParams }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((s) => {
-                const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.GENERATED;
+              {groupRepublished(rows).map((group) => {
+                if (group.length === 1) {
+                  return <SignalRow key={group[0].signal_uid} row={toDisplayRow(group[0])} />;
+                }
                 return (
-                  <tr key={s.signal_uid} className="border-b border-v2-line transition-colors last:border-0 hover:bg-v2-surface">
-                    <td className="v2-num px-3 py-2 text-v2-text-faint">
-                      <Link href={`/v2/signals/${s.signal_uid}`} className="block">{fmtWhen(s.generated_at)}</Link>
-                    </td>
-                    <td className="px-3 py-2 font-medium text-v2-accent">
-                      <Link href={`/v2/signals/${s.signal_uid}`} className="block">{displayFor(s.ticker)}</Link>
-                    </td>
-                    <td className={`px-3 py-2 font-medium ${s.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>{s.direction}</td>
-                    <td className="v2-num px-3 py-2 text-v2-text-muted" title={s.derived ? 'Derived from legacy 0–10 score' : undefined}>
-                      {s.displayScore != null ? `${s.displayScore}${s.derived ? '*' : ''}` : '—'}
-                    </td>
-                    <td className="v2-num px-3 py-2 text-v2-text">{formatInstrumentPrice(s.entry_price, s.ticker)}</td>
-                    <td className="px-3 py-2"><span className={`rounded px-1.5 py-0.5 text-[10px] ${badge.cls}`}>{badge.label}</span></td>
-                    <td className={`v2-num px-3 py-2 ${s.realizedR == null ? 'text-v2-text-faint' : s.realizedR >= 0 ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
-                      {s.realizedR == null ? '—' : `${s.realizedR > 0 ? '+' : ''}${s.realizedR}R`}
-                    </td>
-                  </tr>
+                  <RepublishedGroup
+                    key={group[0].signal_uid}
+                    rows={group.map(toDisplayRow)}
+                    bugDate={new Date(group[0].generated_at).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', timeZone: 'UTC',
+                    })}
+                  />
                 );
               })}
             </tbody>
