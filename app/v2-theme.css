@@ -28,6 +28,10 @@
   --v2-bearish: #e05555;
   --v2-gold: #f59e0b;
   --v2-platinum: #d8dbe2;
+  /* Class accents beyond the core §1 palette, added by decision 2026-06-12
+   * to match the L2 mockup's crypto (purple) and stocks (pink) card bars. */
+  --v2-crypto: #8b5cf6;
+  --v2-stocks: #ec4899;
 
   /* ── Derived text tones (from platinum) ── */
   --v2-text: var(--v2-platinum);
@@ -63,6 +67,8 @@
   --color-v2-bearish: var(--v2-bearish);
   --color-v2-gold: var(--v2-gold);
   --color-v2-platinum: var(--v2-platinum);
+  --color-v2-crypto: var(--v2-crypto);
+  --color-v2-stocks: var(--v2-stocks);
   --color-v2-text: var(--v2-text);
   --color-v2-text-muted: var(--v2-text-muted);
   --color-v2-text-faint: var(--v2-text-faint);

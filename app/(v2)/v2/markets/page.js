@@ -100,47 +100,6 @@ export default async function MarketsHubPage() {
             </p>
           </header>
 
-          {/* ── Global Opportunity Map ── */}
-          <section>
-            <SectionHeading title="Global Opportunity Map" />
-            <div className={`${SWIPE_ROW} md:grid-cols-5`}>
-              {aggregates.map((a) => (
-                <div key={a.key} className={`${SWIPE_CARD} rounded-md border border-v2-line bg-v2-surface p-3`}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-medium text-v2-text">{a.icon} {a.name}</span>
-                    <PctBadge pct={a.trendPct} className="text-[11px]" />
-                  </div>
-                  {a.comingSoon ? (
-                    <p className="text-xs text-v2-text-faint">Coming soon</p>
-                  ) : (
-                    <dl className="space-y-1 text-[11px]">
-                      <div className="flex justify-between">
-                        <dt className="text-v2-text-faint">Opportunities</dt>
-                        <dd className={`v2-num ${a.count > 0 ? 'text-v2-bullish' : 'text-v2-text-faint'}`}>{a.count}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-v2-text-faint">Avg TFS</dt>
-                        <dd className="v2-num text-v2-text" title={a.hasDerived ? 'Includes scores derived from legacy 0–10 ratings' : undefined}>
-                          {a.avgScore ?? '—'}{a.hasDerived ? '*' : ''}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-v2-text-faint">Condition</dt>
-                        <dd className="text-v2-text-muted">{a.condition ?? '—'}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-v2-text-faint">Best</dt>
-                        <dd className="v2-num text-v2-accent">
-                          {a.best ? `${displayFor(a.best.ticker)} ${a.best.displayScore}` : '—'}
-                        </dd>
-                      </div>
-                    </dl>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-
           {/* ── Gold featured spotlight ── */}
           <section className="rounded-md border border-v2-gold-border bg-v2-surface p-4">
             <div className="grid gap-6 lg:grid-cols-3">
@@ -203,6 +162,47 @@ export default async function MarketsHubPage() {
                 </div>
                 <Sparkline data={goldSpark} variant="line" tone="gold" width={280} height={70} />
               </div>
+            </div>
+          </section>
+
+          {/* ── Global Opportunity Map ── */}
+          <section>
+            <SectionHeading title="Global Opportunity Map" />
+            <div className={`${SWIPE_ROW} md:grid-cols-5`}>
+              {aggregates.map((a) => (
+                <div key={a.key} className={`${SWIPE_CARD} rounded-md border border-v2-line bg-v2-surface p-3`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-v2-text">{a.icon} {a.name}</span>
+                    <PctBadge pct={a.trendPct} className="text-[11px]" />
+                  </div>
+                  {a.comingSoon ? (
+                    <p className="text-xs text-v2-text-faint">Coming soon</p>
+                  ) : (
+                    <dl className="space-y-1 text-[11px]">
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Opportunities</dt>
+                        <dd className={`v2-num ${a.count > 0 ? 'text-v2-bullish' : 'text-v2-text-faint'}`}>{a.count}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Avg TFS</dt>
+                        <dd className="v2-num text-v2-text" title={a.hasDerived ? 'Includes scores derived from legacy 0–10 ratings' : undefined}>
+                          {a.avgScore ?? '—'}{a.hasDerived ? '*' : ''}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Condition</dt>
+                        <dd className="text-v2-text-muted">{a.condition ?? '—'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Best</dt>
+                        <dd className="v2-num text-v2-accent">
+                          {a.best ? `${displayFor(a.best.ticker)} ${a.best.displayScore}` : '—'}
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                </div>
+              ))}
             </div>
           </section>
 
