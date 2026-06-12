@@ -14,6 +14,12 @@ import SessionBar from '@/components/v2/SessionBar';
 import PriceTicker from '@/components/v2/PriceTicker';
 import Footer from '@/components/v2/Footer';
 import { v2FontVariables } from '@/components/v2/fonts';
+import { OrganizationJsonLd } from '@/components/v2/JsonLd';
+
+// GA4 for v2 pages only (Task 5d): env-gated — renders nothing unless
+// NEXT_PUBLIC_GA4_ID is set. Legacy pages keep their own analytics in the
+// root layout, untouched.
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 
 // Pre-cutover /v2/* pages must never be indexed (they would be duplicates of
 // the future canonical routes). The cutover session removes this.
@@ -28,6 +34,20 @@ export default function V2Layout({ children }) {
       className={`${v2FontVariables} flex min-h-screen flex-col bg-v2-bg font-v2-body text-v2-text antialiased`}
       style={{ paddingBottom: 'var(--v2-ticker-h)' }}
     >
+      <OrganizationJsonLd />
+      {GA4_ID && (
+        <>
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA4_ID}');`,
+            }}
+          />
+        </>
+      )}
       <Nav />
       <SessionBar />
       <main className="flex-1">{children}</main>

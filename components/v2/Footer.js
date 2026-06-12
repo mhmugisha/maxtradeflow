@@ -10,7 +10,7 @@ const FOOTER_LINKS = [
   { label: 'Tools', href: '/v2/tools' },
   { label: 'AI Trading', href: '/v2/ai-trading' },
   { label: 'News', href: '/v2/news' },
-  { label: 'Risk Disclosure', href: '/v2/risk-disclosure' },
+  { label: 'Risk Disclosure', href: '/v2/disclaimer' },
 ];
 
 export default function Footer() {

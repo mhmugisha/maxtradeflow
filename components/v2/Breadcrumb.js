@@ -3,10 +3,12 @@
 // page (no link, brighter text).
 
 import Link from 'next/link';
+import { BreadcrumbJsonLd } from './JsonLd';
 
 export default function Breadcrumb({ items }) {
   return (
     <div className="border-b border-v2-line bg-v2-surface/60">
+      <BreadcrumbJsonLd items={items} />
       <div className="mx-auto flex max-w-7xl items-center gap-1.5 px-4 py-2 text-xs">
         {items.map((item, i) => {
           const last = i === items.length - 1;

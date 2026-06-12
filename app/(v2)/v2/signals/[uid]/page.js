@@ -15,6 +15,7 @@ import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import SignalJourney from '@/components/v2/SignalJourney';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
+import { ArticleJsonLd } from '@/components/v2/JsonLd';
 
 export const revalidate = 60;
 
@@ -89,6 +90,7 @@ export default async function SignalArticlePage({ params }) {
 
   return (
     <>
+      <ArticleJsonLd signal={signal} path={`/v2/signals/${uid}`} />
       <Breadcrumb
         items={[
           { label: 'Markets', href: '/v2/markets' },
