@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@import "./v2-theme.css"; /* v2.1 token layer (namespaced v2-*) — see app/v2-theme.css */
 
 :root {
   --background: #080d14;

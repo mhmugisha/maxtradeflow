@@ -1,0 +1,87 @@
+/* app/v2-theme.css — v2.1 design token layer (EXECUTION_PLAN.md §1 / A-1).
+ *
+ * Namespaced `v2-` so it coexists with the legacy tokens in globals.css until
+ * cutover (legacy --color-surface is #111e2e; v2 surface is #0f1722). This
+ * file is the ONLY place v2 hex values may appear — components use the
+ * utilities (bg-v2-surface, text-v2-bullish, font-v2-mono, …) per §0.6.
+ *
+ * Palette (§1): bg #080d14 · surface #0f1722 · accent #60c8d4 ·
+ * bullish #1D9E75 · bearish #e05555 · gold #f59e0b · platinum #d8dbe2.
+ * Derived tones (text/borders/washes) are color-mix() of palette values —
+ * no new hex is ever introduced for them.
+ *
+ * Typography (§1): Sora (headlines) · Inter (body) · IBM Plex Mono with
+ * tabular numerals for ALL prices/scores/trading data. The font-family vars
+ * (--font-sora, --font-inter-v2, --font-plex-mono) are injected by next/font
+ * via components/v2/fonts.js on the (v2) layout wrapper.
+ *
+ * Spacing: Tailwind v4's default 0.25rem scale is the spacing scale
+ * (--spacing), plus the fixed chrome heights below for the (v2) shell.
+ */
+
+:root {
+  /* ── Palette ── */
+  --v2-bg: #080d14;
+  --v2-surface: #0f1722;
+  --v2-accent: #60c8d4;
+  --v2-bullish: #1d9e75;
+  --v2-bearish: #e05555;
+  --v2-gold: #f59e0b;
+  --v2-platinum: #d8dbe2;
+
+  /* ── Derived text tones (from platinum) ── */
+  --v2-text: var(--v2-platinum);
+  --v2-text-muted: color-mix(in srgb, var(--v2-platinum) 62%, transparent);
+  --v2-text-faint: color-mix(in srgb, var(--v2-platinum) 38%, transparent);
+
+  /* ── Derived surfaces / lines ── */
+  --v2-surface-raised: color-mix(in srgb, var(--v2-surface) 92%, var(--v2-platinum));
+  --v2-line: color-mix(in srgb, var(--v2-accent) 14%, transparent);
+  --v2-line-strong: color-mix(in srgb, var(--v2-accent) 28%, transparent);
+
+  /* ── Low-alpha washes for badges/pills/spotlights ── */
+  --v2-accent-soft: color-mix(in srgb, var(--v2-accent) 12%, transparent);
+  --v2-bullish-soft: color-mix(in srgb, var(--v2-bullish) 14%, transparent);
+  --v2-bearish-soft: color-mix(in srgb, var(--v2-bearish) 14%, transparent);
+  --v2-gold-soft: color-mix(in srgb, var(--v2-gold) 14%, transparent);
+  --v2-gold-border: color-mix(in srgb, var(--v2-gold) 25%, transparent); /* ≈ #f59e0b40 */
+
+  /* ── (v2) shell chrome heights ── */
+  --v2-nav-h: 56px;
+  --v2-sessionbar-h: 30px;
+  --v2-ticker-h: 38px;
+}
+
+/* Expose tokens as Tailwind utilities (bg-v2-*, text-v2-*, border-v2-*,
+ * font-v2-*). `inline` so utilities resolve var() where they are used. */
+@theme inline {
+  --color-v2-bg: var(--v2-bg);
+  --color-v2-surface: var(--v2-surface);
+  --color-v2-surface-raised: var(--v2-surface-raised);
+  --color-v2-accent: var(--v2-accent);
+  --color-v2-bullish: var(--v2-bullish);
+  --color-v2-bearish: var(--v2-bearish);
+  --color-v2-gold: var(--v2-gold);
+  --color-v2-platinum: var(--v2-platinum);
+  --color-v2-text: var(--v2-text);
+  --color-v2-text-muted: var(--v2-text-muted);
+  --color-v2-text-faint: var(--v2-text-faint);
+  --color-v2-line: var(--v2-line);
+  --color-v2-line-strong: var(--v2-line-strong);
+  --color-v2-accent-soft: var(--v2-accent-soft);
+  --color-v2-bullish-soft: var(--v2-bullish-soft);
+  --color-v2-bearish-soft: var(--v2-bearish-soft);
+  --color-v2-gold-soft: var(--v2-gold-soft);
+  --color-v2-gold-border: var(--v2-gold-border);
+
+  --font-v2-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-v2-body: var(--font-inter-v2), ui-sans-serif, system-ui, sans-serif;
+  --font-v2-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', monospace;
+}
+
+/* All prices/scores/trading data: IBM Plex Mono + tabular numerals (§1).
+ * One utility so it cannot be half-applied. */
+@utility v2-num {
+  font-family: var(--font-plex-mono), ui-monospace, 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
