@@ -91,7 +91,7 @@ export default async function MarketsHubPage() {
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">Markets</h1>
             <p className="mt-1 text-sm text-v2-text-muted">
               Smart Asset Bot scans <span className="v2-num text-v2-accent">{INSTRUMENTS.length}</span>{' '}
-              instruments continuously. <span className="text-v2-accent">Signals fire at score ≥8 &amp; ADX ≥25.</span>
+              instruments continuously. <span className="text-v2-accent">Signals publish at TradeFlow Score ≥70 &amp; ADX ≥25.</span>
             </p>
           </header>
 

@@ -17,11 +17,14 @@ import UpcomingEvents from './UpcomingEvents';
 
 const MAX_CARDS = 8; // two rows of four per the mockup
 
+// Gate copy matches the real publication gate (TFS ≥70 + ADX ≥25, live on
+// the bot since 2026-06-12) — keep in sync with the /v2/ai-trading guide.
+const GATE = 'Signals publish at TradeFlow Score ≥70 and ADX ≥25.';
 const SUBTITLES = {
-  forex: (n) => `${n} currency pairs scanned continuously. Signals fire when score ≥8 and ADX ≥25.`,
-  indices: (n) => `${n} index CFDs scanned continuously. Signals fire when score ≥8 and ADX ≥25.`,
-  commodities: (n) => `${n === 1 ? 'Gold, with more commodities coming' : `${n} commodities`} — scanned continuously. Signals fire when score ≥8 and ADX ≥25.`,
-  crypto: (n) => `${n} crypto pairs scanned continuously. Signals fire when score ≥8 and ADX ≥25.`,
+  forex: (n) => `${n} currency pairs scanned continuously. ${GATE}`,
+  indices: (n) => `${n} index CFDs scanned continuously. ${GATE}`,
+  commodities: (n) => `${n === 1 ? 'Gold, with more commodities coming' : `${n} commodities`} — scanned continuously. ${GATE}`,
+  crypto: (n) => `${n} crypto pairs scanned continuously. ${GATE}`,
 };
 
 const stdev = (xs) => {
