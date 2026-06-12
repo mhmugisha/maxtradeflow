@@ -13,7 +13,7 @@ import { TOOLS as TOOL_PAGES } from './tools/toolsMeta';
 
 const DISCOVER = [
   { label: 'All Signals', href: '/v2/signals' },
-  { label: 'Sessions', href: '/v2/markets/sessions' },
+  { label: 'Sessions', href: '/v2/tools/session-converter' },
   { label: 'Calendar', href: '/v2/calendar' },
 ];
 
