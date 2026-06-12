@@ -4,10 +4,10 @@
 // token-styled card, LastUpdated + degraded states, both disclaimer variants.
 
 import { neon } from '@neondatabase/serverless';
-import { formatInstrumentPrice, displayFor } from '@/lib/instruments';
 import { sessionStatuses } from '@/lib/market-sessions';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import LastUpdated from '@/components/v2/LastUpdated';
+import SignalCard from '@/components/v2/SignalCard';
 import DegradedDemo from './DegradedDemo';
 
 export const revalidate = 60;
@@ -41,65 +41,6 @@ function Section({ title, children }) {
       <h2 className="font-v2-display text-lg font-semibold text-v2-text">{title}</h2>
       {children}
     </section>
-  );
-}
-
-function PriceRow({ label, value, tone = 'text-v2-text' }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-v2-text-muted">{label}</span>
-      <span className={`v2-num text-sm ${tone}`}>{value}</span>
-    </div>
-  );
-}
-
-function SignalCard({ signal }) {
-  if (!signal) {
-    return (
-      <p className="text-sm text-v2-text-muted">
-        No signals found in the database (or the query failed — see server logs). Nothing is
-        fabricated in its place.
-      </p>
-    );
-  }
-  const long = signal.direction === 'LONG';
-  const generated = signal.generated_at
-    ? new Date(signal.generated_at).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
-    : '—';
-  return (
-    <div className="max-w-sm rounded-md border border-v2-line bg-v2-surface p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-v2-display text-base font-bold text-v2-accent">
-          {displayFor(signal.ticker)}
-        </span>
-        <span
-          className={`rounded border px-2 py-0.5 text-[11px] font-medium ${
-            long
-              ? 'border-v2-bullish bg-v2-bullish-soft text-v2-bullish'
-              : 'border-v2-bearish bg-v2-bearish-soft text-v2-bearish'
-          }`}
-        >
-          {signal.direction}
-        </span>
-      </div>
-      <div className="mb-3 text-[11px] text-v2-text-faint">
-        {signal.tradeflow_score != null
-          ? <>TradeFlow Score <span className="v2-num">{signal.tradeflow_score}</span></>
-          : <>Score <span className="v2-num">{signal.score ?? '—'}/10</span></>}
-        {' · '}ADX <span className="v2-num">{signal.adx != null ? Number(signal.adx).toFixed(1) : '—'}</span>
-        {' · '}{generated}
-        {' · '}{signal.status}
-      </div>
-      <div className="space-y-1.5 border-t border-v2-line pt-3">
-        <PriceRow label="Entry" value={formatInstrumentPrice(signal.entry_price, signal.ticker)} />
-        <PriceRow label="SL" value={formatInstrumentPrice(signal.stop_loss, signal.ticker)} tone="text-v2-bearish" />
-        <PriceRow label="TP" value={formatInstrumentPrice(signal.take_profit, signal.ticker)} tone="text-v2-bullish" />
-        <PriceRow label="R:R" value={signal.rr_ratio != null ? `1:${Number(signal.rr_ratio)}` : '—'} />
-      </div>
-      <div className="mt-3 border-t border-v2-line pt-3">
-        <RiskDisclaimer variant="compact" />
-      </div>
-    </div>
   );
 }
 
@@ -173,7 +114,16 @@ export default async function PreviewPage() {
       </Section>
 
       <Section title="Sample signal card (latest real signal, server-rendered)">
-        <SignalCard signal={signal} />
+        {signal ? (
+          <div className="max-w-sm">
+            <SignalCard signal={signal} showDisclaimer />
+          </div>
+        ) : (
+          <p className="text-sm text-v2-text-muted">
+            No signals found in the database (or the query failed — see server logs). Nothing is
+            fabricated in its place.
+          </p>
+        )}
       </Section>
 
       <Section title="Degraded states (simulated age)">

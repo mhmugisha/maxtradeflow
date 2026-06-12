@@ -13,6 +13,7 @@ import SignalCard from '@/components/v2/SignalCard';
 import Sparkline from '@/components/v2/Sparkline';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import LastUpdated from '@/components/v2/LastUpdated';
+import PctBadge, { fmtPct } from '@/components/v2/PctBadge';
 
 export const revalidate = 60;
 
@@ -24,21 +25,6 @@ export const metadata = {
 // Mobile rows swipe with snap (§22); desktop is a grid.
 const SWIPE_ROW = 'flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 md:grid md:overflow-visible md:pb-0';
 const SWIPE_CARD = 'snap-start shrink-0 w-60 md:w-auto';
-
-const fmtPct = (pct) => {
-  if (pct == null) return null;
-  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`, up: pct >= 0 };
-};
-
-function PctBadge({ pct, className = 'text-xs' }) {
-  const f = fmtPct(pct);
-  if (!f) return <span className={`v2-num ${className} text-v2-text-faint`}>—</span>;
-  return (
-    <span className={`v2-num ${className} ${f.up ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
-      {f.up ? '▲' : '▼'} {f.text}
-    </span>
-  );
-}
 
 function SectionHeading({ title, action }) {
   return (
