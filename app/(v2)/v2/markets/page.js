@@ -5,7 +5,6 @@
 import Link from 'next/link';
 import { INSTRUMENTS, instrumentsByClass, formatInstrumentPrice, displayFor } from '@/lib/instruments';
 import { getActiveSignals, getSignalCounts, getDailyChanges, getSparklineData } from '@/lib/v2-data';
-import { sessionStatuses } from '@/lib/market-sessions';
 import { ASSET_CLASSES } from '@/components/v2/assetClassMeta';
 import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
@@ -14,6 +13,8 @@ import Sparkline from '@/components/v2/Sparkline';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import LastUpdated from '@/components/v2/LastUpdated';
 import PctBadge, { fmtPct } from '@/components/v2/PctBadge';
+import ClassCards from '@/components/v2/ClassCards';
+import SessionCards from '@/components/v2/SessionCards';
 
 export const revalidate = 60;
 
@@ -75,7 +76,6 @@ export default async function MarketsHubPage() {
     getSparklineData('XAUUSD', 24),
   ]);
   const aggregates = classAggregates(signals, changes);
-  const sessions = sessionStatuses();
   const gold = changes['XAUUSD'] ?? null;
   const goldSignal = signals.find((s) => s.ticker === 'XAUUSD') ?? null;
   const goldPct = fmtPct(gold?.changePct ?? null);
@@ -204,28 +204,7 @@ export default async function MarketsHubPage() {
           {/* ── All Markets class cards ── */}
           <section>
             <SectionHeading title="All Markets" />
-            <div className={`${SWIPE_ROW} md:grid-cols-5`}>
-              {aggregates.map((a) => (
-                <Link key={a.key} href={a.href} className={`${SWIPE_CARD} group overflow-hidden rounded-md border border-v2-line bg-v2-surface transition-colors hover:border-v2-line-strong`}>
-                  <div className={`h-0.5 ${a.accentBar}`} />
-                  <div className="p-3">
-                    <div className="text-xl">{a.icon}</div>
-                    <div className="mt-1 text-sm font-medium text-v2-text">{a.name}</div>
-                    <div className="text-[11px] text-v2-text-faint">{a.desc}</div>
-                    <div className="mt-2">
-                      {a.comingSoon ? (
-                        <span className="rounded-full border border-v2-line px-2 py-0.5 text-[10px] text-v2-text-faint">Coming soon</span>
-                      ) : a.count > 0 ? (
-                        <span className="rounded-full bg-v2-bullish-soft px-2 py-0.5 text-[10px] text-v2-bullish">● {a.count} active</span>
-                      ) : (
-                        <span className="rounded-full border border-v2-line px-2 py-0.5 text-[10px] text-v2-text-faint">No signals</span>
-                      )}
-                    </div>
-                    <div className="mt-2 text-[11px] text-v2-text-muted transition-colors group-hover:text-v2-accent">View →</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <ClassCards counts={counts.byClass} />
           </section>
 
           {/* ── Market Sessions ── */}
@@ -234,20 +213,7 @@ export default async function MarketsHubPage() {
               title="Market Sessions"
               action={<Link href="/v2/tools/session-converter" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">Session converter →</Link>}
             />
-            <div className={`${SWIPE_ROW} md:grid-cols-4`}>
-              {sessions.map((s) => (
-                <div key={s.name} className={`${SWIPE_CARD} rounded-md border bg-v2-surface px-4 py-3 ${s.open ? 'border-v2-bullish/40' : 'border-v2-line'}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${s.open ? 'bg-v2-bullish' : 'bg-v2-text-faint'}`} aria-hidden />
-                    <span className="text-sm font-medium text-v2-text">{s.name}</span>
-                  </div>
-                  <div className={`mt-0.5 text-xs ${s.open ? 'text-v2-bullish' : 'text-v2-text-faint'}`}>
-                    {s.open ? 'Open now' : 'Closed'}
-                  </div>
-                  <div className="mt-1 text-[11px] text-v2-text-faint">{s.pairs.join(' · ')}</div>
-                </div>
-              ))}
-            </div>
+            <SessionCards />
           </section>
 
           {/* ── Active AI Signals strip ── */}
