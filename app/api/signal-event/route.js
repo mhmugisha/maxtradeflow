@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import { isAuthorized } from '@/lib/signal-auth';
+import { recomputeStatsForInstrument } from '@/lib/stats';
 
 function getDb() {
   return neon(process.env.NEON_DATABASE_URL);
@@ -47,10 +48,11 @@ export async function POST(request) {
     const sql = getDb();
 
     // The signal must exist (clear 404 rather than a FK error).
-    const found = await sql`SELECT 1 FROM signals WHERE signal_uid = ${signal_uid} LIMIT 1`;
+    const found = await sql`SELECT ticker FROM signals WHERE signal_uid = ${signal_uid} LIMIT 1`;
     if (found.length === 0) {
       return NextResponse.json({ error: 'Unknown signal_uid' }, { status: 404 });
     }
+    const ticker = found[0].ticker;
 
     // Append-only, idempotent on (signal_uid, event_type).
     const inserted = await sql`
@@ -72,7 +74,22 @@ export async function POST(request) {
         AND status NOT IN ('TP_HIT', 'SL_HIT', 'EXPIRED', 'INVALIDATED')
     `;
 
-    return NextResponse.json({ success: true, signal_uid, event_type, idempotent: !wasNew });
+    // A closing event changes the rolling last-30 window — recompute stats for
+    // this instrument + platform. Failure here must not lose the event (it is
+    // already recorded), so it is logged and surfaced in the response rather
+    // than failing the request (§0.5: no silent failures).
+    let stats = 'skipped';
+    if (wasNew && (event_type === 'TP_HIT' || event_type === 'SL_HIT')) {
+      try {
+        await recomputeStatsForInstrument(ticker);
+        stats = 'recomputed';
+      } catch (statsError) {
+        console.error(`[signal-event] stats recompute failed (${ticker}):`, statsError?.message || statsError);
+        stats = 'failed';
+      }
+    }
+
+    return NextResponse.json({ success: true, signal_uid, event_type, idempotent: !wasNew, stats });
   } catch (error) {
     console.error('Signal event error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
