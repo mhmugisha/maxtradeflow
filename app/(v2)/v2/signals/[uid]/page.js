@@ -215,14 +215,13 @@ export default async function SignalArticlePage({ params }) {
               ) : (
                 <p className="text-sm text-v2-text-muted">No analysis was published for this signal.</p>
               )}
+              <div className="mt-3 text-right">
+                <Link href={instrumentHref} className="text-xs text-v2-accent hover:underline">
+                  View the {displayFor(signal.ticker)} instrument page →
+                </Link>
+              </div>
             </div>
           </section>
-
-          <div>
-            <Link href={instrumentHref} className="text-sm text-v2-accent hover:underline">
-              View the {displayFor(signal.ticker)} instrument page →
-            </Link>
-          </div>
 
           <RiskDisclaimer variant="full" />
         </div>
