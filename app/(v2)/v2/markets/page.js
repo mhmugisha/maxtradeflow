@@ -1,0 +1,296 @@
+// /v2/markets — L2 Markets Hub per docs/mockups/L2_Markets_Hub.png (Phase A
+// Session 2 Task 2). Server-rendered, ISR 60s. Every number traces to
+// lib/v2-data.js (signals/price_snapshots) or lib/market-sessions.js (§0.2).
+
+import Link from 'next/link';
+import { INSTRUMENTS, instrumentsByClass, formatInstrumentPrice, displayFor, getInstrument } from '@/lib/instruments';
+import { getActiveSignals, getSignalCounts, getDailyChanges, getSparklineData } from '@/lib/v2-data';
+import { sessionStatuses } from '@/lib/market-sessions';
+import { ASSET_CLASSES } from '@/components/v2/assetClassMeta';
+import Breadcrumb from '@/components/v2/Breadcrumb';
+import MarketsSidebar from '@/components/v2/MarketsSidebar';
+import SignalCard from '@/components/v2/SignalCard';
+import Sparkline from '@/components/v2/Sparkline';
+import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
+import LastUpdated from '@/components/v2/LastUpdated';
+
+export const revalidate = 60;
+
+export const metadata = {
+  title: 'Markets — MaxTradeFlow',
+  description: 'Live market overview: forex, indices, commodities and crypto scanned continuously by Smart Asset Bot.',
+};
+
+// Mobile rows swipe with snap (§22); desktop is a grid.
+const SWIPE_ROW = 'flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 md:grid md:overflow-visible md:pb-0';
+const SWIPE_CARD = 'snap-start shrink-0 w-60 md:w-auto';
+
+const fmtPct = (pct) => {
+  if (pct == null) return null;
+  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`, up: pct >= 0 };
+};
+
+function PctBadge({ pct, className = 'text-xs' }) {
+  const f = fmtPct(pct);
+  if (!f) return <span className={`v2-num ${className} text-v2-text-faint`}>—</span>;
+  return (
+    <span className={`v2-num ${className} ${f.up ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
+      {f.up ? '▲' : '▼'} {f.text}
+    </span>
+  );
+}
+
+function SectionHeading({ title, action }) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className="font-v2-display text-base font-semibold text-v2-text">{title}</h2>
+      {action}
+    </div>
+  );
+}
+
+// Per-class aggregates for the opportunity map — all from real active
+// signals + snapshots; "—" when a value has no basis (e.g. no signals).
+function classAggregates(signals, changes) {
+  return ASSET_CLASSES.map((cls) => {
+    const clsSignals = signals.filter((s) => s.assetClass === cls.key);
+    const scores = clsSignals.map((s) => s.displayScore).filter((v) => v != null);
+    const avgScore = scores.length
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : null;
+    const hasDerived = clsSignals.some((s) => s.derived && s.displayScore != null);
+
+    const conditions = clsSignals.map((s) => s.market_condition).filter(Boolean);
+    const condition = conditions.length
+      ? Object.entries(conditions.reduce((m, c) => ((m[c] = (m[c] ?? 0) + 1), m), {}))
+          .sort((a, b) => b[1] - a[1])[0][0]
+      : null;
+
+    const best = clsSignals
+      .filter((s) => s.displayScore != null)
+      .sort((a, b) => b.displayScore - a.displayScore)[0] ?? null;
+
+    const clsChanges = instrumentsByClass(cls.key)
+      .map((i) => changes[i.symbol]?.changePct)
+      .filter((v) => v != null);
+    const trendPct = clsChanges.length
+      ? Math.round((clsChanges.reduce((a, b) => a + b, 0) / clsChanges.length) * 100) / 100
+      : null;
+
+    return { ...cls, count: clsSignals.length, avgScore, hasDerived, condition, best, trendPct };
+  });
+}
+
+function instrumentHref(ticker) {
+  const inst = getInstrument(ticker);
+  return inst ? `/v2/markets/${inst.assetClass}/${inst.slug}` : '/v2/markets';
+}
+
+export default async function MarketsHubPage() {
+  const [signals, counts, changes, goldSpark] = await Promise.all([
+    getActiveSignals(),
+    getSignalCounts(),
+    getDailyChanges(),
+    getSparklineData('XAUUSD', 24),
+  ]);
+  const aggregates = classAggregates(signals, changes);
+  const sessions = sessionStatuses();
+  const gold = changes['XAUUSD'] ?? null;
+  const goldSignal = signals.find((s) => s.ticker === 'XAUUSD') ?? null;
+  const goldPct = fmtPct(gold?.changePct ?? null);
+
+  return (
+    <>
+      <Breadcrumb items={[{ label: 'Markets' }]} />
+      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+        <MarketsSidebar active="overview" counts={counts.byClass} />
+
+        <div className="min-w-0 flex-1 space-y-10 py-6">
+          <header>
+            <h1 className="font-v2-display text-2xl font-bold text-v2-text">Markets</h1>
+            <p className="mt-1 text-sm text-v2-text-muted">
+              Smart Asset Bot scans <span className="v2-num text-v2-accent">{INSTRUMENTS.length}</span>{' '}
+              instruments continuously. <span className="text-v2-accent">Signals fire at score ≥8 &amp; ADX ≥25.</span>
+            </p>
+          </header>
+
+          {/* ── Global Opportunity Map ── */}
+          <section>
+            <SectionHeading title="Global Opportunity Map" />
+            <div className={`${SWIPE_ROW} md:grid-cols-5`}>
+              {aggregates.map((a) => (
+                <div key={a.key} className={`${SWIPE_CARD} rounded-md border border-v2-line bg-v2-surface p-3`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-v2-text">{a.icon} {a.name}</span>
+                    <PctBadge pct={a.trendPct} className="text-[11px]" />
+                  </div>
+                  {a.comingSoon ? (
+                    <p className="text-xs text-v2-text-faint">Coming soon</p>
+                  ) : (
+                    <dl className="space-y-1 text-[11px]">
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Opportunities</dt>
+                        <dd className={`v2-num ${a.count > 0 ? 'text-v2-bullish' : 'text-v2-text-faint'}`}>{a.count}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Avg TFS</dt>
+                        <dd className="v2-num text-v2-text" title={a.hasDerived ? 'Includes scores derived from legacy 0–10 ratings' : undefined}>
+                          {a.avgScore ?? '—'}{a.hasDerived ? '*' : ''}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Condition</dt>
+                        <dd className="text-v2-text-muted">{a.condition ?? '—'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-v2-text-faint">Best</dt>
+                        <dd className="v2-num text-v2-accent">
+                          {a.best ? `${displayFor(a.best.ticker)} ${a.best.displayScore}` : '—'}
+                        </dd>
+                      </div>
+                    </dl>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Gold featured spotlight ── */}
+          <section className="rounded-md border border-v2-gold-border bg-v2-surface p-4">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div>
+                <div className="mb-2 text-[10px] uppercase tracking-widest text-v2-gold">★ Featured Instrument</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="v2-num text-3xl font-semibold text-v2-gold">
+                    {formatInstrumentPrice(gold?.price, 'XAUUSD')}
+                  </span>
+                  <PctBadge pct={gold?.changePct ?? null} className="text-sm" />
+                </div>
+                <div className="mt-1 font-v2-display text-sm font-semibold text-v2-text">Gold — XAUUSD</div>
+                <div className="text-xs text-v2-text-faint">Precious metal · Most traded commodity</div>
+                <div className="mt-3 flex gap-2">
+                  <Link href="/v2/markets/commodities/xauusd" className="rounded bg-v2-gold px-3 py-1.5 text-xs font-medium text-v2-bg transition-opacity hover:opacity-90">
+                    View signals
+                  </Link>
+                  <Link href="/v2/markets/commodities/xauusd" className="rounded border border-v2-gold-border px-3 py-1.5 text-xs text-v2-gold transition-colors hover:bg-v2-gold-soft">
+                    Full chart
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-md border border-v2-line bg-v2-bg p-3">
+                {goldSignal ? (
+                  <>
+                    <div className={`mb-2 text-xs font-medium ${goldSignal.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
+                      ● Active Signal — {goldSignal.direction}
+                    </div>
+                    <dl className="space-y-1.5 text-xs">
+                      {[
+                        ['Entry', formatInstrumentPrice(goldSignal.entry_price, 'XAUUSD'), 'text-v2-text'],
+                        ['SL', formatInstrumentPrice(goldSignal.stop_loss, 'XAUUSD'), 'text-v2-bearish'],
+                        ['TP', formatInstrumentPrice(goldSignal.take_profit, 'XAUUSD'), 'text-v2-bullish'],
+                        ['TFS', goldSignal.displayScore ?? '—', 'text-v2-text'],
+                        ['ADX', goldSignal.adx?.toFixed(1) ?? '—', 'text-v2-text'],
+                      ].map(([label, value, tone]) => (
+                        <div key={label} className="flex justify-between">
+                          <dt className="text-v2-text-faint">{label}</dt>
+                          <dd className={`v2-num ${tone}`}>{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </>
+                ) : (
+                  <div className="flex h-full flex-col justify-center">
+                    <div className="text-xs font-medium text-v2-text-muted">No active Gold signal</div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-v2-text-faint">
+                      Smart Asset Bot has no open XAUUSD setup right now. New signals appear here the
+                      moment they publish.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-md border border-v2-line bg-v2-bg p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[11px] text-v2-text-faint">Gold price — last 24h</span>
+                  <LastUpdated timestamp={gold?.lastTs} />
+                </div>
+                <Sparkline data={goldSpark} variant="line" tone="gold" width={280} height={70} />
+              </div>
+            </div>
+          </section>
+
+          {/* ── All Markets class cards ── */}
+          <section>
+            <SectionHeading title="All Markets" />
+            <div className={`${SWIPE_ROW} md:grid-cols-5`}>
+              {aggregates.map((a) => (
+                <Link key={a.key} href={a.href} className={`${SWIPE_CARD} group overflow-hidden rounded-md border border-v2-line bg-v2-surface transition-colors hover:border-v2-line-strong`}>
+                  <div className={`h-0.5 ${a.accentBar}`} />
+                  <div className="p-3">
+                    <div className="text-xl">{a.icon}</div>
+                    <div className="mt-1 text-sm font-medium text-v2-text">{a.name}</div>
+                    <div className="text-[11px] text-v2-text-faint">{a.desc}</div>
+                    <div className="mt-2">
+                      {a.comingSoon ? (
+                        <span className="rounded-full border border-v2-line px-2 py-0.5 text-[10px] text-v2-text-faint">Coming soon</span>
+                      ) : a.count > 0 ? (
+                        <span className="rounded-full bg-v2-bullish-soft px-2 py-0.5 text-[10px] text-v2-bullish">● {a.count} active</span>
+                      ) : (
+                        <span className="rounded-full border border-v2-line px-2 py-0.5 text-[10px] text-v2-text-faint">No signals</span>
+                      )}
+                    </div>
+                    <div className="mt-2 text-[11px] text-v2-text-muted transition-colors group-hover:text-v2-accent">View →</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Market Sessions ── */}
+          <section>
+            <SectionHeading
+              title="Market Sessions"
+              action={<Link href="/v2/tools/session-converter" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">Session converter →</Link>}
+            />
+            <div className={`${SWIPE_ROW} md:grid-cols-4`}>
+              {sessions.map((s) => (
+                <div key={s.name} className={`${SWIPE_CARD} rounded-md border bg-v2-surface px-4 py-3 ${s.open ? 'border-v2-bullish/40' : 'border-v2-line'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`h-1.5 w-1.5 rounded-full ${s.open ? 'bg-v2-bullish' : 'bg-v2-text-faint'}`} aria-hidden />
+                    <span className="text-sm font-medium text-v2-text">{s.name}</span>
+                  </div>
+                  <div className={`mt-0.5 text-xs ${s.open ? 'text-v2-bullish' : 'text-v2-text-faint'}`}>
+                    {s.open ? 'Open now' : 'Closed'}
+                  </div>
+                  <div className="mt-1 text-[11px] text-v2-text-faint">{s.pairs.join(' · ')}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── Active AI Signals strip ── */}
+          <section>
+            <SectionHeading
+              title="Active AI Signals — All Markets"
+              action={<Link href="/v2/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>}
+            />
+            {signals.length === 0 ? (
+              <p className="text-sm text-v2-text-muted">No active signals right now. The bot publishes only setups scoring at the gate — quiet periods are honest, not hidden.</p>
+            ) : (
+              <div className={`${SWIPE_ROW} md:grid-cols-4`}>
+                {signals.map((s) => (
+                  <div key={s.signal_uid} className={SWIPE_CARD}>
+                    <SignalCard signal={s} classTag href={instrumentHref(s.ticker)} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <RiskDisclaimer variant="compact" />
+        </div>
+      </div>
+    </>
+  );
+}
