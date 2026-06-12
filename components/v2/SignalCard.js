@@ -26,7 +26,9 @@ function Row({ label, value, tone = 'text-v2-text' }) {
   );
 }
 
-export default function SignalCard({ signal, href, classTag = false, showDisclaimer = false }) {
+// detailed: adds the remaining v2 fields (confidence, market condition,
+// session, expected duration, reasons) for the L4 Signal Details panel.
+export default function SignalCard({ signal, href, classTag = false, showDisclaimer = false, detailed = false }) {
   if (!signal) return null;
   const long = signal.direction === 'LONG';
   const gold = signal.ticker === 'XAUUSD';
@@ -74,6 +76,33 @@ export default function SignalCard({ signal, href, classTag = false, showDisclai
         <Row label="TP" value={formatInstrumentPrice(signal.take_profit, signal.ticker)} tone="text-v2-bullish" />
         <Row label="R:R" value={rr != null ? `1:${rr}` : '—'} />
       </div>
+      {detailed && (
+        <div className="mt-3 space-y-1.5 border-t border-v2-line pt-3">
+          {[
+            ['Confidence', signal.confidence != null ? `${num(signal.confidence)}` : null],
+            ['Condition', signal.market_condition],
+            ['Session', signal.session],
+            ['Duration', signal.expected_duration],
+          ]
+            .filter(([, v]) => v != null)
+            .map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between">
+                <span className="text-xs text-v2-text-muted">{label}</span>
+                <span className="v2-num text-xs text-v2-text">{value}</span>
+              </div>
+            ))}
+          {Array.isArray(signal.reasons) && signal.reasons.length > 0 && (
+            <ul className="space-y-1 pt-1">
+              {signal.reasons.map((r) => (
+                <li key={r.code} className="flex gap-1.5 text-[11px] leading-snug text-v2-text-faint">
+                  <span className="text-v2-accent">•</span>
+                  {r.label ?? r.code}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {showDisclaimer && (
         <div className="mt-3 border-t border-v2-line pt-3">
           <RiskDisclaimer variant="compact" />
