@@ -92,6 +92,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Bot-published article bodies (signal Analysis) arrive as raw HTML, so
+ * Tailwind utilities can't reach their elements — style descendants here,
+ * from the same tokens. Mirrors the v2 card text scale (text-sm body,
+ * font-v2-display headings). */
+.v2-prose {
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: var(--v2-text-muted);
+}
+.v2-prose p,
+.v2-prose ul,
+.v2-prose ol {
+  margin-block: 0.75rem;
+}
+.v2-prose h2,
+.v2-prose h3,
+.v2-prose h4 {
+  margin-block: 1.25rem 0.5rem;
+  font-family: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--v2-text);
+}
+.v2-prose h2 { font-size: 0.9375rem; }
+.v2-prose h3,
+.v2-prose h4 { font-size: 0.875rem; }
+.v2-prose ul { list-style: disc; padding-inline-start: 1.25rem; }
+.v2-prose ol { list-style: decimal; padding-inline-start: 1.25rem; }
+.v2-prose li { margin-block: 0.25rem; }
+.v2-prose strong { font-weight: 600; color: var(--v2-text); }
+.v2-prose a { color: var(--v2-accent); }
+.v2-prose a:hover { text-decoration: underline; }
+.v2-prose > :first-child { margin-block-start: 0; }
+.v2-prose > :last-child { margin-block-end: 0; }
+/* The bot wraps some bodies in <article>; unwrap its margins too. */
+.v2-prose > article > :first-child { margin-block-start: 0; }
+.v2-prose > article > :last-child { margin-block-end: 0; }
+
 /* ── (v2) shell helpers ──────────────────────────────────────────────────── */
 
 /* Build-alongside chrome neutralization. The root app/layout.js wraps every
