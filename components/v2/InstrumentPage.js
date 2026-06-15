@@ -7,15 +7,15 @@
 // summary (sidebar variant, decorative timeframe tabs, upcoming events).
 
 import Link from 'next/link';
-import { getInstrument, formatInstrumentPrice, displayFor } from '@/lib/instruments';
+import { getInstrument, instrumentsByClass, formatInstrumentPrice } from '@/lib/instruments';
 import {
   getActiveSignals, getSignalCounts, getDailyChanges, getChartData,
   getLatestSignalForInstrument, getSignalHistory, getSignalEvents,
-  getInstrumentStatsGate, getArticleForSignal,
+  getInstrumentStatsGate, getArticleForSignal, getScreener,
 } from '@/lib/v2-data';
 import { sessionStatuses } from '@/lib/market-sessions';
 import { stripMarkdownArtifacts } from '@/lib/sanitize-analysis';
-import { classMeta, l4Href } from './assetClassMeta';
+import { classMeta } from './assetClassMeta';
 import Breadcrumb from './Breadcrumb';
 import MarketsSidebar from './MarketsSidebar';
 import SignalCard from './SignalCard';
@@ -114,7 +114,7 @@ export default async function InstrumentPage({ symbol }) {
   const inst = getInstrument(symbol);
   const cls = classMeta(inst.assetClass);
 
-  const [signals, counts, changes, bars, latestSignal, statsGate, history] = await Promise.all([
+  const [signals, counts, changes, bars, latestSignal, statsGate, history, screener] = await Promise.all([
     getActiveSignals(),
     getSignalCounts(),
     getDailyChanges(),
@@ -122,6 +122,7 @@ export default async function InstrumentPage({ symbol }) {
     getLatestSignalForInstrument(symbol),
     getInstrumentStatsGate(symbol),
     getSignalHistory(symbol, 10),
+    getScreener(),
   ]);
   const active = signals.find((s) => s.ticker === symbol) ?? null;
   const journeySignal = latestSignal;
@@ -141,6 +142,30 @@ export default async function InstrumentPage({ symbol }) {
   const lows = dayBars.map((b) => b.low ?? b.close).filter((v) => v != null);
   const hi24 = highs.length ? Math.max(...highs) : null;
   const lo24 = lows.length ? Math.min(...lows) : null;
+
+  // Scanner rows: every instrument in the current asset class, joined with
+  // the live screener, sorted TRADE → WATCH → AVOID (then by TFS desc within
+  // each tier). Instruments the bot didn't return rank last with score —.
+  const ACTION_RANK = { TRADE: 0, WATCH: 1, AVOID: 2 };
+  const screenerBySymbol = new Map(screener.map((s) => [s.symbol, s]));
+  const scannerRows = instrumentsByClass(inst.assetClass)
+    .map((i) => {
+      const s = screenerBySymbol.get(i.symbol);
+      return {
+        symbol: i.symbol,
+        display: i.display,
+        slug: i.slug,
+        score: s?.score ?? null,
+        direction: s?.direction ?? null,
+        action: s?.action ?? null,
+      };
+    })
+    .sort((a, b) => {
+      const ar = ACTION_RANK[a.action] ?? 3;
+      const br = ACTION_RANK[b.action] ?? 3;
+      if (ar !== br) return ar - br;
+      return (b.score ?? -1) - (a.score ?? -1);
+    });
 
   const gateReady = (statsGate.stats?.sample_size ?? 0) >= 30;
 
@@ -373,28 +398,49 @@ export default async function InstrumentPage({ symbol }) {
               </section>
 
               <section>
-                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">Related instruments</h2>
-                <div className="space-y-1.5">
-                  {inst.related.map((relSym) => {
-                    const rel = getInstrument(relSym);
-                    const relChange = changes[relSym] ?? null;
-                    const href = l4Href(rel);
-                    const row = (
-                      <div className="flex items-center justify-between rounded-md border border-v2-line bg-v2-surface px-3 py-2">
-                        <span className="text-xs font-medium text-v2-text">{rel?.display ?? relSym}</span>
-                        <span className="flex items-center gap-2">
-                          <span className="v2-num text-xs text-v2-text-muted">{formatInstrumentPrice(relChange?.price, relSym)}</span>
-                          <PctBadge pct={relChange?.changePct ?? null} className="text-[10px]" />
-                        </span>
-                      </div>
-                    );
-                    return href ? (
-                      <Link key={relSym} href={href} className="block transition-opacity hover:opacity-80">{row}</Link>
-                    ) : (
-                      <div key={relSym} title="Instrument page coming with the full L4 rollout">{row}</div>
-                    );
-                  })}
-                </div>
+                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">
+                  Signal Scanner — {cls.name}
+                </h2>
+                {screener.length === 0 ? (
+                  <p className="rounded-md border border-v2-line bg-v2-surface p-4 text-xs text-v2-text-faint">
+                    Scanner unavailable — refreshes every 60s.
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {scannerRows.map((r) => {
+                      const isCurrent = r.symbol === inst.symbol;
+                      const href = `/v2/markets/${inst.assetClass}/${r.slug}`;
+                      return (
+                        <Link
+                          key={r.symbol}
+                          href={href}
+                          className={`flex items-center justify-between rounded-md border px-3 py-2 transition-colors ${
+                            isCurrent
+                              ? 'border-v2-line border-l-2 border-l-v2-accent bg-v2-accent-soft'
+                              : 'border-v2-line bg-v2-surface hover:border-v2-line-strong'
+                          }`}
+                        >
+                          <span className="text-xs font-medium text-v2-text">{r.display}</span>
+                          <span className="flex items-center gap-2">
+                            <span className="v2-num text-xs text-v2-text-muted">{r.score != null ? r.score : '—'}</span>
+                            {r.action === 'TRADE' && r.direction === 'LONG' && (
+                              <span className="rounded bg-v2-bullish-soft px-1.5 py-0.5 text-[10px] font-medium text-v2-bullish">LONG</span>
+                            )}
+                            {r.action === 'TRADE' && r.direction === 'SHORT' && (
+                              <span className="rounded bg-v2-bearish-soft px-1.5 py-0.5 text-[10px] font-medium text-v2-bearish">SHORT</span>
+                            )}
+                            {r.action === 'WATCH' && (
+                              <span className="rounded border border-v2-line-strong px-1.5 py-0.5 text-[10px] font-medium text-v2-text-muted">WATCH</span>
+                            )}
+                            {(!r.action || r.action === 'AVOID') && (
+                              <span className="text-[10px] text-v2-text-faint">—</span>
+                            )}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
 
               <section>
