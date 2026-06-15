@@ -1,6 +1,14 @@
-// components/v2/PriceChart.js — L4 price chart per L4_Instrument.png: inline
-// SVG from price_snapshots 1h bars, no chart library (A-2). Pure server-safe
-// component.
+// components/v2/PriceChart.js — UNUSED as of fix/v2-tradingview-chart.
+// The L4 instrument page now renders components/TradingViewChart.js instead
+// of this inline-SVG chart (the close-only price_snapshots data couldn't
+// support real OHLC candles). Kept in the tree because it may be useful as a
+// fallback or for a future signal-overlay surface; if it's still unreferenced
+// in a future pass, delete it.
+//
+// Original docs follow.
+//
+// L4 price chart per L4_Instrument.png: inline SVG from price_snapshots 1h
+// bars, no chart library (A-2). Pure server-safe component.
 //
 // Honesty rules:
 //   - x position is the bar's REAL timestamp, so missing bars leave visible

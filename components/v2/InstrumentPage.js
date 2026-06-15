@@ -20,7 +20,7 @@ import Breadcrumb from './Breadcrumb';
 import MarketsSidebar from './MarketsSidebar';
 import SignalCard from './SignalCard';
 import SignalJourney from './SignalJourney';
-import PriceChart from './PriceChart';
+import TradingViewChart from '../TradingViewChart';
 import PctBadge from './PctBadge';
 import LastUpdated from './LastUpdated';
 import RiskDisclaimer from './RiskDisclaimer';
@@ -53,6 +53,33 @@ function genericAbout(inst) {
       return `${d} is a cryptocurrency quoted in US dollars. Crypto trades 24/7 without a session structure. Typical drivers are crypto-market liquidity, regulatory news, and broader risk sentiment.`;
     default:
       return `${d} is scanned continuously by the Smart Asset Bot. Signal publication follows the gate: TradeFlow Score ≥ 70 and ADX ≥ 25.`;
+  }
+}
+
+// Map an internal symbol to the ticker TradingView's public widget accepts.
+// Working public feeds per class (kept narrow on purpose — these are the only
+// classes lib/instruments.js registers):
+//   forex        FX:EURUSD
+//   indices      OANDA:SPX500USD / NAS100USD / US30USD (FOREXCOM:US500 etc.
+//                404 on the public widget — verified 2026-06-15)
+//   commodities  OANDA:XAUUSD             (same OANDA convention as v1)
+//   crypto       BINANCE:BTCUSDT          (USDT is the deepest Binance market;
+//                                          our USD-quoted symbols translate by
+//                                          appending T)
+function tradingViewSymbol(inst) {
+  switch (inst.assetClass) {
+    case 'forex': return `FX:${inst.symbol}`;
+    case 'indices': {
+      const indexMap = {
+        'US500': 'OANDA:SPX500USD',
+        'NAS100': 'OANDA:NAS100USD',
+        'US30': 'OANDA:US30USD',
+      };
+      return indexMap[inst.symbol] ?? `OANDA:${inst.symbol}USD`;
+    }
+    case 'commodities': return `OANDA:${inst.symbol}`;
+    case 'crypto': return `BINANCE:${inst.symbol}T`;
+    default: return inst.symbol;
   }
 }
 
@@ -115,13 +142,6 @@ export default async function InstrumentPage({ symbol }) {
   const hi24 = highs.length ? Math.max(...highs) : null;
   const lo24 = lows.length ? Math.min(...lows) : null;
 
-  const levels = active
-    ? [
-        { label: 'TP', value: active.take_profit, tone: 'bullish' },
-        { label: 'SL', value: active.stop_loss, tone: 'bearish' },
-      ]
-    : [];
-
   const gateReady = (statsGate.stats?.sample_size ?? 0) >= 30;
 
   return (
@@ -178,12 +198,12 @@ export default async function InstrumentPage({ symbol }) {
           <div className="flex flex-col gap-6 lg:flex-row">
             {/* ── Main column ── */}
             <div className="min-w-0 flex-1 space-y-8">
-              <section className="rounded-md border border-v2-line bg-v2-surface p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="rounded border border-v2-line-strong bg-v2-accent-soft px-2 py-0.5 text-[11px] text-v2-accent">1H</span>
-                  <span className="text-[11px] text-v2-text-faint">1h bars · last 72h · UTC</span>
+              <section className="overflow-hidden rounded-md border border-v2-line bg-v2-surface">
+                <div className="flex items-center justify-between border-b border-v2-line px-4 py-2">
+                  <span className="text-xs font-medium text-v2-text">{inst.display} Chart</span>
+                  <span className="text-[11px] text-v2-text-faint">Powered by TradingView</span>
                 </div>
-                <PriceChart bars={bars} symbol={symbol} levels={levels} />
+                <TradingViewChart symbol={tradingViewSymbol(inst)} interval="60" height={500} />
               </section>
 
               {/* Active signal strip */}
