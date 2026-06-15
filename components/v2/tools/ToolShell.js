@@ -16,10 +16,10 @@ export default function ToolShell({ slug, counts, children }) {
   return (
     <>
       <Breadcrumb items={[{ label: 'Tools', href: '/v2/tools' }, { label: tool.name }]} />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+      <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={`tools:${slug}`} counts={counts?.byClass} />
 
-        <div className="min-w-0 flex-1 space-y-8 py-6">
+        <div className="min-w-0 space-y-8 px-6 py-6">
           <header className="space-y-2">
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">{tool.name}</h1>
             <p className="max-w-xl text-sm text-v2-text-muted">{tool.short}</p>

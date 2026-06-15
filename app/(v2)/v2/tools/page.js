@@ -23,10 +23,10 @@ export default async function ToolsHubPage() {
   return (
     <>
       <Breadcrumb items={[{ label: 'Tools' }]} />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+      <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active="tools" counts={counts.byClass} />
 
-        <div className="min-w-0 flex-1 space-y-6 py-6">
+        <div className="min-w-0 space-y-6 px-6 py-6">
           <header className="space-y-2">
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">Trading Calculators</h1>
             <p className="max-w-xl text-sm text-v2-text-muted">

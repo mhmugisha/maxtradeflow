@@ -161,10 +161,10 @@ export default async function AssetClassPage({ classKey }) {
   return (
     <>
       <Breadcrumb items={[{ label: 'Markets', href: '/v2/markets' }, { label: meta.name }]} />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+      <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={classKey} counts={counts.byClass} />
 
-        <div className="min-w-0 flex-1 space-y-10 py-6">
+        <div className="min-w-0 space-y-10 px-6 py-6">
           <header>
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">{meta.name}</h1>
             <p className="mt-1 text-sm text-v2-text-muted">

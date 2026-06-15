@@ -169,7 +169,7 @@ export default async function InstrumentPage({ symbol }) {
       {/* ── 4-column edge-to-edge shell (feat/instrument-layout-v2) ──
           Cols: MarketsSidebar | Scanner | Chart | Signal details. Columns
           carry their own dividers; full viewport-fit via min-h-screen. */}
-      <div className="grid grid-cols-[176px_216px_minmax(0,1fr)_216px]">
+      <div className="grid grid-cols-[224px_216px_minmax(0,1fr)_216px]">
         {/* ── Col 1: existing left nav, flush to viewport edge ── */}
         <div>
           <MarketsSidebar active={inst.assetClass} counts={counts.byClass} />
@@ -430,7 +430,7 @@ export default async function InstrumentPage({ symbol }) {
       {/* ── Below the fold: existing content kept for context, not in the
           edge-to-edge shell. Stacks below the 4-col viewport so scrolling
           reaches Journey / History / About / Analysis / Events. ── */}
-      <div className="grid grid-cols-[176px_216px_minmax(0,1fr)_216px]">
+      <div className="grid grid-cols-[224px_216px_minmax(0,1fr)_216px]">
         <div className="border-r border-v2-line" />
         <div className="border-r border-v2-line" />
         <div className="space-y-8 px-6 py-8">

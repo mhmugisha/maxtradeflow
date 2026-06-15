@@ -14,7 +14,6 @@ import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import LastUpdated from '@/components/v2/LastUpdated';
 import PctBadge, { fmtPct } from '@/components/v2/PctBadge';
 import ClassCards from '@/components/v2/ClassCards';
-import SessionCards from '@/components/v2/SessionCards';
 
 export const revalidate = 60;
 
@@ -83,10 +82,10 @@ export default async function MarketsHubPage() {
   return (
     <>
       <Breadcrumb items={[{ label: 'Markets' }]} />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+      <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active="overview" counts={counts.byClass} />
 
-        <div className="min-w-0 flex-1 space-y-10 py-6">
+        <div className="min-w-0 space-y-10 px-6 py-6">
           <header>
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">Markets</h1>
             <p className="mt-1 text-sm text-v2-text-muted">
@@ -205,15 +204,6 @@ export default async function MarketsHubPage() {
           <section>
             <SectionHeading title="All Markets" />
             <ClassCards counts={counts.byClass} />
-          </section>
-
-          {/* ── Market Sessions ── */}
-          <section>
-            <SectionHeading
-              title="Market Sessions"
-              action={<Link href="/v2/tools/session-converter" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">Session converter →</Link>}
-            />
-            <SessionCards />
           </section>
 
           {/* ── Active AI Signals strip ── */}

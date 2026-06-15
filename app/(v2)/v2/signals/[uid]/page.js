@@ -101,10 +101,10 @@ export default async function SignalArticlePage({ params }) {
           { label: `${signal.ticker} signal · ${fmtDateLong(signal.generated_at)}` },
         ]}
       />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
+      <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={inst?.assetClass ?? 'overview'} counts={counts.byClass} />
 
-        <div className="min-w-0 flex-1 space-y-8 py-6">
+        <div className="min-w-0 space-y-8 px-6 py-6">
           <header className="space-y-3">
             <h1 className="font-v2-display text-2xl font-bold text-v2-text">
               {displayFor(signal.ticker)}{' '}

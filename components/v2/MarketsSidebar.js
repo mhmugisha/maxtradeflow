@@ -117,7 +117,7 @@ export default function MarketsSidebar({ active = 'overview', counts = {} }) {
     <>
       {/* Desktop: sticky column */}
       <aside
-        className="sticky hidden w-44 shrink-0 self-start border-r border-v2-line md:block"
+        className="sticky hidden w-56 shrink-0 self-start border-r border-v2-line md:block"
         style={{ top: 'var(--v2-nav-h)' }}
       >
         <SidebarBody active={active} counts={counts} />
