@@ -27,7 +27,8 @@ import RiskDisclaimer from './RiskDisclaimer';
 import UpcomingEvents from './UpcomingEvents';
 
 // Factual instrument descriptions (task: what it is, sessions, drivers —
-// no hype). Extend when more L4 pages roll out.
+// no hype). Extend when copy is written for an instrument; the fallback in
+// genericAbout() below covers anything not yet in this map.
 const ABOUT = {
   EURUSD: 'EUR/USD is the exchange rate between the euro and the US dollar and the most traded currency pair in the world. Liquidity is deepest during the London and New York sessions, peaking in their overlap. Typical drivers are ECB and Federal Reserve policy, eurozone and US inflation prints, and US labor data.',
   GBPUSD: 'GBP/USD ("Cable") is the exchange rate between the British pound and the US dollar. It is most liquid during London hours and the London–New York overlap. Typical drivers are Bank of England policy, UK inflation and labor data, and broad US dollar flows.',
@@ -35,6 +36,25 @@ const ABOUT = {
   NAS100: 'NAS100 tracks the NASDAQ-100 — the 100 largest non-financial companies on the Nasdaq exchange, heavily weighted toward technology. Trading is most active during the New York session. Typical drivers are large-cap tech earnings, US interest-rate expectations, and US macro data.',
   US500: 'US500 tracks the S&P 500 — roughly 500 of the largest US-listed companies and the most-followed broad US equity benchmark. Trading is most active during the New York session. Typical drivers are earnings breadth, Federal Reserve policy, and US macro data.',
 };
+
+// Per-class fallback when an instrument-specific entry hasn't been written
+// yet. Honest and short — no fabricated specifics; the bot's gate is the only
+// concrete claim because it's universally true for every scanned instrument.
+function genericAbout(inst) {
+  const d = inst.display;
+  switch (inst.assetClass) {
+    case 'forex':
+      return `${d} is a foreign exchange pair. Liquidity is typically deepest during the London and New York sessions. Drivers vary by pair but commonly include central-bank policy on each side of the quote, inflation prints, and labor data.`;
+    case 'indices':
+      return `${d} is a stock index CFD. Trading is most active during its home equity session. Typical drivers are earnings, central-bank policy, and macro data from the underlying economy.`;
+    case 'commodities':
+      return `${d} is a commodity quoted in US dollars. Drivers commonly include physical supply and demand, the broad US dollar, and risk sentiment.`;
+    case 'crypto':
+      return `${d} is a cryptocurrency quoted in US dollars. Crypto trades 24/7 without a session structure. Typical drivers are crypto-market liquidity, regulatory news, and broader risk sentiment.`;
+    default:
+      return `${d} is scanned continuously by the Smart Asset Bot. Signal publication follows the gate: TradeFlow Score ≥ 70 and ADX ≥ 25.`;
+  }
+}
 
 // "Market open" approximation, documented: crypto trades 24/7; everything
 // else here follows the FX/CFD week — open whenever any of the four session
@@ -282,7 +302,7 @@ export default async function InstrumentPage({ symbol }) {
               {/* About */}
               <section>
                 <h2 className="mb-2 font-v2-display text-base font-semibold text-v2-text">About {inst.display}</h2>
-                <p className="text-sm leading-relaxed text-v2-text-muted">{ABOUT[symbol]}</p>
+                <p className="text-sm leading-relaxed text-v2-text-muted">{ABOUT[symbol] ?? genericAbout(inst)}</p>
               </section>
 
               <RiskDisclaimer variant="compact" />

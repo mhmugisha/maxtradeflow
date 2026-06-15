@@ -60,12 +60,10 @@ export function classMeta(key) {
   return ASSET_CLASSES.find((c) => c.key === key) ?? null;
 }
 
-// L4 instrument pages that exist so far (Phase A Session 3 builds five).
-// Everything else keeps placeholder behavior until the Phase B rollout.
-export const L4_BUILT = new Set(['EURUSD', 'GBPUSD', 'XAUUSD', 'NAS100', 'US500']);
-
-/** Href to an instrument's L4 page, or null if it isn't built yet. */
+/** Href to an instrument's L4 page. Every registered instrument has one
+ *  since fix/l4-dynamic-routes: app/(v2)/v2/markets/<class>/[symbol]/page.js
+ *  serves all instruments listed in lib/instruments.js for that class. */
 export function l4Href(inst) {
-  if (!inst || !L4_BUILT.has(inst.symbol)) return null;
+  if (!inst) return null;
   return `/v2/markets/${inst.assetClass}/${inst.slug}`;
 }
