@@ -16,9 +16,7 @@ import {
 import { sessionStatuses } from '@/lib/market-sessions';
 import { stripMarkdownArtifacts } from '@/lib/sanitize-analysis';
 import { classMeta } from './assetClassMeta';
-import Breadcrumb from './Breadcrumb';
 import MarketsSidebar from './MarketsSidebar';
-import SignalCard from './SignalCard';
 import SignalJourney from './SignalJourney';
 import TradingViewChart from '../TradingViewChart';
 import PctBadge from './PctBadge';
@@ -101,15 +99,6 @@ const OUTCOME_BADGE = {
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '—';
 
-function StatChip({ label, value, hint }) {
-  return (
-    <div className="rounded border border-v2-line bg-v2-surface px-2.5 py-1.5" title={hint}>
-      <div className="text-[10px] text-v2-text-faint">{label}</div>
-      <div className="v2-num text-xs text-v2-text">{value}</div>
-    </div>
-  );
-}
-
 export default async function InstrumentPage({ symbol }) {
   const inst = getInstrument(symbol);
   const cls = classMeta(inst.assetClass);
@@ -169,217 +158,250 @@ export default async function InstrumentPage({ symbol }) {
 
   const gateReady = (statsGate.stats?.sample_size ?? 0) >= 30;
 
+  const breadcrumbItems = [
+    { label: 'Markets', href: '/v2/markets' },
+    { label: cls.name, href: cls.href },
+    { label: inst.symbol },
+  ];
+
   return (
     <>
-      <Breadcrumb
-        items={[
-          { label: 'Markets', href: '/v2/markets' },
-          { label: cls.name, href: cls.href },
-          { label: inst.symbol },
-        ]}
-      />
-      <div className="mx-auto flex max-w-7xl gap-6 px-4">
-        <MarketsSidebar active={inst.assetClass} counts={counts.byClass} />
+      {/* ── 4-column edge-to-edge shell (feat/instrument-layout-v2) ──
+          Cols: MarketsSidebar | Scanner | Chart | Signal details. Columns
+          carry their own dividers; full viewport-fit via min-h-screen. */}
+      <div className="grid grid-cols-[176px_216px_minmax(0,1fr)_216px]">
+        {/* ── Col 1: existing left nav, flush to viewport edge ── */}
+        <div>
+          <MarketsSidebar active={inst.assetClass} counts={counts.byClass} />
+        </div>
 
-        <div className="min-w-0 flex-1 py-6">
-          {/* ── Header ── */}
-          <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <h1 className="font-v2-display text-2xl font-bold text-v2-text">{inst.symbol}</h1>
-                <span className="text-sm text-v2-text-faint">{inst.name}</span>
-              </div>
-              <div className="mt-1 flex flex-wrap items-baseline gap-3">
-                <span className="v2-num text-3xl font-semibold text-v2-text">
-                  {formatInstrumentPrice(change?.price, symbol)}
+        {/* ── Col 2: breadcrumb + scanner ── */}
+        <div className="flex min-w-0 flex-col border-l border-v2-line">
+          <div className="border-b border-v2-line bg-v2-surface/60 px-3 py-2 text-[11px]">
+            {breadcrumbItems.map((item, i) => {
+              const last = i === breadcrumbItems.length - 1;
+              return (
+                <span key={item.label} className="inline">
+                  {i > 0 && <span className="mx-1 text-v2-text-faint">›</span>}
+                  {last || !item.href ? (
+                    <span className={last ? 'text-v2-text' : 'text-v2-text-muted'}>{item.label}</span>
+                  ) : (
+                    <Link href={item.href} className="text-v2-text-muted hover:text-v2-accent">{item.label}</Link>
+                  )}
                 </span>
-                <PctBadge pct={change?.changePct ?? null} className="text-sm" />
-                <LastUpdated timestamp={change?.lastTs} prefix="Last bar" />
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <StatChip label="24h High" value={formatInstrumentPrice(hi24, symbol)} />
-                <StatChip label="24h Low" value={formatInstrumentPrice(lo24, symbol)} />
-                <StatChip
-                  label="ADX (latest signal)"
-                  value={active?.adx != null ? active.adx.toFixed(1) : '—'}
-                  hint="From the instrument's active signal — not a live indicator feed"
-                />
-                <StatChip
-                  label="RSI (latest signal)"
-                  value={active?.rsi != null ? active.rsi.toFixed(1) : '—'}
-                  hint="From the instrument's active signal — not a live indicator feed"
-                />
-              </div>
+              );
+            })}
+          </div>
+          <div className="px-3 pb-1.5 pt-3 text-[10px] uppercase tracking-widest text-v2-text-faint">
+            Signal scanner — {cls.name}
+          </div>
+          {screener.length === 0 ? (
+            <p className="px-3 py-2 text-[11px] text-v2-text-faint">
+              Scanner unavailable — refreshes every 60s.
+            </p>
+          ) : (
+            <div className="flex flex-col">
+              {scannerRows.map((r) => {
+                const isCurrent = r.symbol === inst.symbol;
+                const href = `/v2/markets/${inst.assetClass}/${r.slug}`;
+                return (
+                  <Link
+                    key={r.symbol}
+                    href={href}
+                    className={`flex items-center justify-between border-b border-v2-line px-3 py-2 transition-colors ${
+                      isCurrent
+                        ? 'border-l-2 border-l-v2-accent bg-v2-accent-soft'
+                        : 'border-l-2 border-l-transparent hover:bg-v2-surface'
+                    }`}
+                  >
+                    <span className="text-[11px] font-medium text-v2-text">{r.display}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="v2-num text-[11px] text-v2-text-muted">{r.score != null ? r.score : '—'}</span>
+                      {r.action === 'TRADE' && r.direction === 'LONG' && (
+                        <span className="rounded bg-v2-bullish-soft px-1 py-0.5 text-[9px] font-medium text-v2-bullish">LONG</span>
+                      )}
+                      {r.action === 'TRADE' && r.direction === 'SHORT' && (
+                        <span className="rounded bg-v2-bearish-soft px-1 py-0.5 text-[9px] font-medium text-v2-bearish">SHORT</span>
+                      )}
+                      {r.action === 'WATCH' && (
+                        <span className="rounded border border-v2-line-strong px-1 py-0.5 text-[9px] font-medium text-v2-text-muted">WATCH</span>
+                      )}
+                      {(!r.action || r.action === 'AVOID') && (
+                        <span className="text-[10px] text-v2-text-faint">—</span>
+                      )}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
-            <span
-              className={`rounded-full border px-3 py-1 text-xs ${
-                open ? 'border-v2-bullish/40 text-v2-bullish' : 'border-v2-line text-v2-text-faint'
-              }`}
-            >
-              ● Market {open ? 'Open' : 'Closed'}
-            </span>
-          </header>
+          )}
+        </div>
 
-          <div className="flex flex-col gap-6 lg:flex-row">
-            {/* ── Main column ── */}
-            <div className="min-w-0 flex-1 space-y-8">
-              <section className="overflow-hidden rounded-md border border-v2-line bg-v2-surface">
-                <div className="flex items-center justify-between border-b border-v2-line px-4 py-2">
-                  <span className="text-xs font-medium text-v2-text">{inst.display} Chart</span>
-                  <span className="text-[11px] text-v2-text-faint">Powered by TradingView</span>
+        {/* ── Col 3: chart column (top bar / stat chips / chart / active strip) ── */}
+        <div className="flex min-w-0 flex-col border-l border-v2-line">
+          {/* Row A: top bar */}
+          <div className="flex items-center justify-between gap-4 border-b border-v2-line px-4 py-2.5">
+            <div className="flex items-baseline gap-3">
+              <span className="font-v2-display text-lg font-bold text-v2-text">{inst.display}</span>
+              <span className="v2-num text-2xl font-semibold text-v2-text">
+                {formatInstrumentPrice(change?.price, symbol)}
+              </span>
+              <PctBadge pct={change?.changePct ?? null} className="text-sm" />
+              <LastUpdated timestamp={change?.lastTs} prefix="Last bar" />
+            </div>
+            <div className="flex items-center gap-3">
+              <span
+                className={`rounded-full border px-3 py-1 text-xs ${
+                  open ? 'border-v2-bullish/40 text-v2-bullish' : 'border-v2-line text-v2-text-faint'
+                }`}
+              >
+                ● Market {open ? 'Open' : 'Closed'}
+              </span>
+              <span className="text-[10px] text-v2-text-faint">Powered by TradingView</span>
+            </div>
+          </div>
+
+          {/* Row B: stat chips bar */}
+          <div className="flex items-center gap-5 border-b border-v2-line px-4 py-1.5">
+            {[
+              ['24h High', formatInstrumentPrice(hi24, symbol)],
+              ['24h Low', formatInstrumentPrice(lo24, symbol)],
+              ['ADX', active?.adx != null ? active.adx.toFixed(1) : '—'],
+              ['RSI', active?.rsi != null ? active.rsi.toFixed(1) : '—'],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline gap-1.5 text-[11px]">
+                <span className="text-v2-text-faint">{label}</span>
+                <span className="v2-num text-v2-text">{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Row C: chart */}
+          <div className="min-w-0">
+            <TradingViewChart symbol={tradingViewSymbol(inst)} interval="60" height={720} />
+          </div>
+
+          {/* Row D: active signal strip */}
+          {active && (
+            <div className="border-t border-v2-line px-4 py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-baseline gap-3">
+                  <span className={`text-xs font-semibold ${active.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
+                    ● Active signal — {active.direction}
+                  </span>
+                  <span className="text-[11px] text-v2-text-faint">
+                    {active.displayScore != null && <>TFS <span className="v2-num">{active.displayScore}{active.derived ? '*' : ''}</span> · </>}
+                    ADX <span className="v2-num">{active.adx?.toFixed(1) ?? '—'}</span> ·
+                    RSI <span className="v2-num">{active.rsi?.toFixed(1) ?? '—'}</span> · {fmtDate(active.generated_at)}
+                  </span>
                 </div>
-                <TradingViewChart symbol={tradingViewSymbol(inst)} interval="60" height={500} />
-              </section>
-
-              {/* Active signal strip */}
-              {active ? (
-                <section className="rounded-md border border-v2-line bg-v2-surface px-4 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className={`text-xs font-medium ${active.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
-                      ● Active Signal — {active.direction}
-                    </span>
-                    <span className="text-[11px] text-v2-text-faint">
-                      {active.displayScore != null && <>TFS <span className="v2-num">{active.displayScore}{active.derived ? '*' : ''}</span> · </>}
-                      ADX <span className="v2-num">{active.adx?.toFixed(1) ?? '—'}</span> ·
-                      RSI <span className="v2-num">{active.rsi?.toFixed(1) ?? '—'}</span> · {fmtDate(active.generated_at)}
-                    </span>
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
-                    {[
-                      ['Entry', formatInstrumentPrice(active.entry_price, symbol), 'text-v2-text'],
-                      ['Stop Loss', formatInstrumentPrice(active.stop_loss, symbol), 'text-v2-bearish'],
-                      ['Take Profit', formatInstrumentPrice(active.take_profit, symbol), 'text-v2-bullish'],
-                      ['R:R Ratio', active.rr_ratio != null ? `1 : ${active.rr_ratio}` : '—', 'text-v2-accent'],
-                    ].map(([label, value, tone]) => (
-                      <div key={label} className="rounded border border-v2-line bg-v2-bg px-2.5 py-1.5">
-                        <div className="text-[10px] text-v2-text-faint">{label}</div>
-                        <div className={`v2-num text-sm ${tone}`}>{value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ) : (
-                <section className="rounded-md border border-v2-line bg-v2-surface px-4 py-3 text-sm text-v2-text-muted">
-                  No active signal on {inst.display} right now
-                  {journeySignal && (
-                    <>
-                      {' '}— last signal {fmtDate(journeySignal.generated_at)} (
-                      <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="text-v2-accent hover:underline">
-                        view
-                      </Link>
-                      )
-                    </>
-                  )}
-                  .
-                </section>
-              )}
-
-              {/* Analysis excerpt from the signal's article */}
-              {analysisExcerpt && (
-                <section className="rounded-md border border-v2-line bg-v2-surface p-4">
-                  <div className="mb-2 text-[10px] uppercase tracking-widest text-v2-text-faint">Analysis</div>
-                  <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
-                  {journeySignal && (
-                    <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="mt-2 inline-block text-xs text-v2-accent hover:underline">
-                      Read full analysis →
-                    </Link>
-                  )}
-                </section>
-              )}
-
-              {/* Signal Journey */}
-              {journeySignal && (
-                <section>
-                  <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">
-                    Signal Journey
-                    <span className="ml-2 text-xs font-normal text-v2-text-faint">
-                      latest signal · {fmtDate(journeySignal.generated_at)} {journeySignal.direction}
-                    </span>
-                  </h2>
-                  <SignalJourney signal={journeySignal} events={events} />
-                </section>
-              )}
-
-              {/* Signal History */}
-              <section>
-                <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Signal History</h2>
-                {history.length === 0 ? (
-                  <p className="text-sm text-v2-text-muted">
-                    No completed signals yet — outcome tracking began June 2026.
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto rounded-md border border-v2-line">
-                    <table className="w-full min-w-120 text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-v2-line text-[10px] uppercase tracking-wide text-v2-text-faint">
-                          <th className="px-3 py-2 font-normal">Date</th>
-                          <th className="px-3 py-2 font-normal">Direction</th>
-                          <th className="px-3 py-2 font-normal">Score</th>
-                          <th className="px-3 py-2 font-normal">Entry</th>
-                          <th className="px-3 py-2 font-normal">Outcome</th>
-                          <th className="px-3 py-2 font-normal">R</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.map((h) => {
-                          const badge = OUTCOME_BADGE[h.status] ?? OUTCOME_BADGE.EXPIRED;
-                          return (
-                            <tr key={h.signal_uid} className="border-b border-v2-line last:border-0">
-                              <td className="v2-num px-3 py-2 text-v2-text-muted">{fmtDate(h.generated_at)}</td>
-                              <td className={`px-3 py-2 font-medium ${h.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>{h.direction}</td>
-                              <td className="v2-num px-3 py-2 text-v2-text-muted">
-                                {h.tradeflow_score != null ? h.tradeflow_score : h.score != null ? `${h.score}/10` : '—'}
-                              </td>
-                              <td className="v2-num px-3 py-2 text-v2-text">{formatInstrumentPrice(h.entry_price, symbol)}</td>
-                              <td className="px-3 py-2"><span className={`rounded px-1.5 py-0.5 text-[10px] ${badge.cls}`}>{badge.label}</span></td>
-                              <td className={`v2-num px-3 py-2 ${h.realizedR == null ? 'text-v2-text-faint' : h.realizedR >= 0 ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
-                                {h.realizedR == null ? '—' : `${h.realizedR > 0 ? '+' : ''}${h.realizedR}R`}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-
-              {/* About */}
-              <section>
-                <h2 className="mb-2 font-v2-display text-base font-semibold text-v2-text">About {inst.display}</h2>
-                <p className="text-sm leading-relaxed text-v2-text-muted">{ABOUT[symbol] ?? genericAbout(inst)}</p>
-              </section>
-
-              <RiskDisclaimer variant="compact" />
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    ['Entry', formatInstrumentPrice(active.entry_price, symbol), 'text-v2-text'],
+                    ['SL', formatInstrumentPrice(active.stop_loss, symbol), 'text-v2-bearish'],
+                    ['TP', formatInstrumentPrice(active.take_profit, symbol), 'text-v2-bullish'],
+                    ['R:R', active.rr_ratio != null ? `1:${active.rr_ratio}` : '—', 'text-v2-accent'],
+                  ].map(([label, value, tone]) => (
+                    <div key={label} className="rounded border border-v2-line bg-v2-bg px-2 py-1">
+                      <div className="text-[9px] text-v2-text-faint">{label}</div>
+                      <div className={`v2-num text-xs ${tone}`}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+          )}
+        </div>
 
-            {/* ── Right rail ── */}
-            <aside className="w-full shrink-0 space-y-6 lg:w-72">
-              <section>
-                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">Signal Details</h2>
-                {active ? (
-                  <SignalCard signal={active} detailed href={`/v2/signals/${active.signal_uid}`} />
-                ) : (
-                  <div className="rounded-md border border-v2-line bg-v2-surface p-4 text-xs text-v2-text-faint">
-                    No active signal. This panel fills with full signal details (TFS, confidence,
-                    market condition, reasons) when one publishes.
+        {/* ── Col 4: signal details panel ── */}
+        <div className="flex min-w-0 flex-col border-l border-v2-line">
+          <div className="border-b border-v2-line px-3 py-2 text-[10px] uppercase tracking-widest text-v2-text-faint">
+            Signal details
+          </div>
+          <div className="flex-1 space-y-4 overflow-y-auto p-3">
+            {active ? (
+              <>
+                {/* Header row */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-v2-display text-base font-bold text-v2-accent">{inst.display}</span>
+                  <span
+                    className={`rounded border px-2 py-0.5 text-[10px] font-medium ${
+                      active.direction === 'LONG'
+                        ? 'border-v2-bullish bg-v2-bullish-soft text-v2-bullish'
+                        : 'border-v2-bearish bg-v2-bearish-soft text-v2-bearish'
+                    }`}
+                  >
+                    {active.direction}
+                  </span>
+                </div>
+
+                {/* Large TFS + progress bar — hero number for this column */}
+                {active.displayScore != null && (
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[11px] font-medium text-v2-text-muted">TradeFlow Score™</span>
+                      <span className="v2-num text-2xl font-bold text-v2-accent">
+                        {active.displayScore}{active.derived ? '*' : ''}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-1 overflow-hidden rounded bg-v2-line">
+                      <div
+                        className="h-full bg-v2-accent"
+                        style={{ width: `${Math.min(100, Math.max(0, active.displayScore))}%` }}
+                      />
+                    </div>
                   </div>
                 )}
-              </section>
 
-              <section>
-                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">
-                  Performance — last 30 signals
-                </h2>
-                <div className="rounded-md border border-v2-line bg-v2-surface p-4">
+                {/* Session / Duration / Confidence rows */}
+                {[
+                  ['Session', active.session],
+                  ['Duration', active.expected_duration],
+                  ['Confidence', active.confidence != null ? `${active.confidence}` : null],
+                ].some(([, v]) => v != null) && (
+                  <div className="space-y-1.5">
+                    {[
+                      ['Session', active.session],
+                      ['Duration', active.expected_duration],
+                      ['Confidence', active.confidence != null ? `${active.confidence}` : null],
+                    ]
+                      .filter(([, v]) => v != null)
+                      .map(([label, value]) => (
+                        <div key={label} className="flex items-center justify-between">
+                          <span className="text-[11px] text-v2-text-muted">{label}</span>
+                          <span className="v2-num text-xs text-v2-text">{value}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                {/* Why this signal exists */}
+                {Array.isArray(active.reasons) && active.reasons.length > 0 && (
+                  <div className="border-t border-v2-line pt-3">
+                    <div className="mb-1.5 text-[10px] uppercase tracking-widest text-v2-text-faint">
+                      Why this signal exists
+                    </div>
+                    <ul className="space-y-1">
+                      {active.reasons.map((r) => (
+                        <li key={r.code} className="flex gap-1.5 text-[11px] leading-snug text-v2-text-muted">
+                          <span className="text-v2-accent">•</span>
+                          {r.label ?? r.code}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Performance */}
+                <div className="border-t border-v2-line pt-3">
+                  <div className="mb-1.5 text-[10px] uppercase tracking-widest text-v2-text-faint">Performance</div>
                   {gateReady ? (
-                    <dl className="space-y-1.5 text-xs">
+                    <dl className="space-y-1 text-[11px]">
                       {[
                         ['Win rate', `${statsGate.stats.win_rate}%`],
-                        ['Avg realized R', statsGate.stats.avg_realized_rr],
+                        ['Avg R', statsGate.stats.avg_realized_rr],
                         ['Net R', statsGate.stats.net_r],
-                        ['Avg hold', statsGate.stats.avg_hold_minutes != null ? `${Math.round(statsGate.stats.avg_hold_minutes / 60)}h` : '—'],
-                        ['Sample', `${statsGate.stats.sample_size} closed signals`],
+                        ['Sample', `${statsGate.stats.sample_size}`],
                       ].map(([label, value]) => (
                         <div key={label} className="flex justify-between">
                           <dt className="text-v2-text-faint">{label}</dt>
@@ -388,76 +410,126 @@ export default async function InstrumentPage({ symbol }) {
                       ))}
                     </dl>
                   ) : (
-                    <p className="text-xs leading-relaxed text-v2-text-faint">
+                    <p className="text-[11px] leading-relaxed text-v2-text-faint">
                       Performance stats unlock at 30 closed signals —{' '}
                       <span className="v2-num text-v2-text-muted">{statsGate.closedCount}/30</span> so far.
                       No win-rate numbers are shown below that sample.
                     </p>
                   )}
                 </div>
-              </section>
-
-              <section>
-                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">
-                  Signal Scanner — {cls.name}
-                </h2>
-                {screener.length === 0 ? (
-                  <p className="rounded-md border border-v2-line bg-v2-surface p-4 text-xs text-v2-text-faint">
-                    Scanner unavailable — refreshes every 60s.
-                  </p>
-                ) : (
-                  <div className="space-y-1">
-                    {scannerRows.map((r) => {
-                      const isCurrent = r.symbol === inst.symbol;
-                      const href = `/v2/markets/${inst.assetClass}/${r.slug}`;
-                      return (
-                        <Link
-                          key={r.symbol}
-                          href={href}
-                          className={`flex items-center justify-between rounded-md border px-3 py-2 transition-colors ${
-                            isCurrent
-                              ? 'border-v2-line border-l-2 border-l-v2-accent bg-v2-accent-soft'
-                              : 'border-v2-line bg-v2-surface hover:border-v2-line-strong'
-                          }`}
-                        >
-                          <span className="text-xs font-medium text-v2-text">{r.display}</span>
-                          <span className="flex items-center gap-2">
-                            <span className="v2-num text-xs text-v2-text-muted">{r.score != null ? r.score : '—'}</span>
-                            {r.action === 'TRADE' && r.direction === 'LONG' && (
-                              <span className="rounded bg-v2-bullish-soft px-1.5 py-0.5 text-[10px] font-medium text-v2-bullish">LONG</span>
-                            )}
-                            {r.action === 'TRADE' && r.direction === 'SHORT' && (
-                              <span className="rounded bg-v2-bearish-soft px-1.5 py-0.5 text-[10px] font-medium text-v2-bearish">SHORT</span>
-                            )}
-                            {r.action === 'WATCH' && (
-                              <span className="rounded border border-v2-line-strong px-1.5 py-0.5 text-[10px] font-medium text-v2-text-muted">WATCH</span>
-                            )}
-                            {(!r.action || r.action === 'AVOID') && (
-                              <span className="text-[10px] text-v2-text-faint">—</span>
-                            )}
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-
-              <section>
-                <h2 className="mb-2 font-v2-display text-sm font-semibold text-v2-text">Upcoming scheduled events</h2>
-                <UpcomingEvents
-                  symbols={[symbol]}
-                  days={14}
-                  limit={3}
-                  emptyText={`No major scheduled events for ${inst.display} in the next 14 days.`}
-                />
-                <Link href="/v2/calendar" className="mt-2 inline-block text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">
-                  Full calendar →
-                </Link>
-              </section>
-            </aside>
+              </>
+            ) : (
+              <div className="text-[11px] leading-relaxed text-v2-text-faint">
+                No active signal. This panel fills with TFS, confidence, session and reasons when one publishes.
+              </div>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* ── Below the fold: existing content kept for context, not in the
+          edge-to-edge shell. Stacks below the 4-col viewport so scrolling
+          reaches Journey / History / About / Analysis / Events. ── */}
+      <div className="grid grid-cols-[176px_216px_minmax(0,1fr)_216px]">
+        <div className="border-r border-v2-line" />
+        <div className="border-r border-v2-line" />
+        <div className="space-y-8 px-6 py-8">
+        {!active && journeySignal && (
+          <p className="text-sm text-v2-text-muted">
+            No active signal on {inst.display} right now — last signal {fmtDate(journeySignal.generated_at)} (
+            <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="text-v2-accent hover:underline">view</Link>
+            ).
+          </p>
+        )}
+
+        {analysisExcerpt && (
+          <section className="rounded-md border border-v2-line bg-v2-surface p-4">
+            <div className="mb-2 text-[10px] uppercase tracking-widest text-v2-text-faint">Analysis</div>
+            <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
+            {journeySignal && (
+              <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="mt-2 inline-block text-xs text-v2-accent hover:underline">
+                Read full analysis →
+              </Link>
+            )}
+          </section>
+        )}
+
+        {journeySignal && (
+          <section>
+            <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">
+              Signal Journey
+              <span className="ml-2 text-xs font-normal text-v2-text-faint">
+                latest signal · {fmtDate(journeySignal.generated_at)} {journeySignal.direction}
+              </span>
+            </h2>
+            <SignalJourney signal={journeySignal} events={events} />
+          </section>
+        )}
+
+        <section>
+          <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Signal History</h2>
+          {history.length === 0 ? (
+            <p className="text-sm text-v2-text-muted">
+              No completed signals yet — outcome tracking began June 2026.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-md border border-v2-line">
+              <table className="w-full min-w-120 text-left text-xs">
+                <thead>
+                  <tr className="border-b border-v2-line text-[10px] uppercase tracking-wide text-v2-text-faint">
+                    <th className="px-3 py-2 font-normal">Date</th>
+                    <th className="px-3 py-2 font-normal">Direction</th>
+                    <th className="px-3 py-2 font-normal">Score</th>
+                    <th className="px-3 py-2 font-normal">Entry</th>
+                    <th className="px-3 py-2 font-normal">Outcome</th>
+                    <th className="px-3 py-2 font-normal">R</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((h) => {
+                    const badge = OUTCOME_BADGE[h.status] ?? OUTCOME_BADGE.EXPIRED;
+                    return (
+                      <tr key={h.signal_uid} className="border-b border-v2-line last:border-0">
+                        <td className="v2-num px-3 py-2 text-v2-text-muted">{fmtDate(h.generated_at)}</td>
+                        <td className={`px-3 py-2 font-medium ${h.direction === 'LONG' ? 'text-v2-bullish' : 'text-v2-bearish'}`}>{h.direction}</td>
+                        <td className="v2-num px-3 py-2 text-v2-text-muted">
+                          {h.tradeflow_score != null ? h.tradeflow_score : h.score != null ? `${h.score}/10` : '—'}
+                        </td>
+                        <td className="v2-num px-3 py-2 text-v2-text">{formatInstrumentPrice(h.entry_price, symbol)}</td>
+                        <td className="px-3 py-2"><span className={`rounded px-1.5 py-0.5 text-[10px] ${badge.cls}`}>{badge.label}</span></td>
+                        <td className={`v2-num px-3 py-2 ${h.realizedR == null ? 'text-v2-text-faint' : h.realizedR >= 0 ? 'text-v2-bullish' : 'text-v2-bearish'}`}>
+                          {h.realizedR == null ? '—' : `${h.realizedR > 0 ? '+' : ''}${h.realizedR}R`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className="mb-2 font-v2-display text-base font-semibold text-v2-text">About {inst.display}</h2>
+          <p className="text-sm leading-relaxed text-v2-text-muted">{ABOUT[symbol] ?? genericAbout(inst)}</p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 font-v2-display text-base font-semibold text-v2-text">Upcoming scheduled events</h2>
+          <UpcomingEvents
+            symbols={[symbol]}
+            days={14}
+            limit={3}
+            emptyText={`No major scheduled events for ${inst.display} in the next 14 days.`}
+          />
+          <Link href="/v2/calendar" className="mt-2 inline-block text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">
+            Full calendar →
+          </Link>
+        </section>
+
+        <RiskDisclaimer variant="compact" />
+        </div>
+        <div className="border-l border-v2-line" />
       </div>
     </>
   );
