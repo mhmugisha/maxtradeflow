@@ -12,7 +12,8 @@ import { ASSET_CLASSES } from './assetClassMeta';
 import { TOOLS as TOOL_PAGES } from './tools/toolsMeta';
 
 const DISCOVER = [
-  { label: 'All Signals', href: '/v2/signals' },
+  { label: 'All Signals', href: '/v2/signals', key: 'signals' },
+  { label: 'AI Trading', href: '/v2/ai-trading', key: 'ai-trading' },
   { label: 'Sessions', href: '/v2/tools/session-converter' },
   { label: 'Calendar', href: '/v2/calendar' },
   { label: 'Education', href: '/v2/education', key: 'education' },

@@ -5,7 +5,9 @@
 
 import Link from 'next/link';
 import { displayFor, formatInstrumentPrice, instrumentsByClass } from '@/lib/instruments';
-import { getSignalsPage, getPlatformStatsGate } from '@/lib/v2-data';
+import { getSignalsPage, getPlatformStatsGate, getSignalCounts } from '@/lib/v2-data';
+import Breadcrumb from '@/components/v2/Breadcrumb';
+import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import ArchiveFilters from './ArchiveFilters';
 import SignalRow from './SignalRow';
@@ -91,7 +93,7 @@ export default async function SignalsArchivePage({ searchParams }) {
   const assetClass = ['forex', 'indices', 'commodities', 'crypto'].includes(sp.class) ? sp.class : null;
   const status = ['active', 'tp', 'sl', 'expired', 'invalidated'].includes(sp.status) ? sp.status : null;
 
-  const [{ rows, total }, platformGate] = await Promise.all([
+  const [{ rows, total }, platformGate, counts] = await Promise.all([
     getSignalsPage({
       page,
       perPage: PER_PAGE,
@@ -100,6 +102,7 @@ export default async function SignalsArchivePage({ searchParams }) {
       classTickers: assetClass ? instrumentsByClass(assetClass).map((i) => i.symbol) : null,
     }),
     getPlatformStatsGate(),
+    getSignalCounts(),
   ]);
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));
   const sinceLabel = platformGate.earliest
@@ -115,7 +118,12 @@ export default async function SignalsArchivePage({ searchParams }) {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+    <>
+      <Breadcrumb items={[{ label: 'All Signals' }]} />
+      <div className="grid grid-cols-[224px_1fr]">
+        <MarketsSidebar active="signals" counts={counts.byClass} />
+
+        <div className="min-w-0 space-y-6 px-6 py-6">
       <header>
         <h1 className="font-v2-display text-2xl font-bold text-v2-text">Signal Archive</h1>
         <p className="mt-1 text-sm text-v2-text-muted">
@@ -184,6 +192,8 @@ export default async function SignalsArchivePage({ searchParams }) {
       </div>
 
       <RiskDisclaimer variant="compact" />
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -4,7 +4,9 @@
 
 import Link from 'next/link';
 import { INSTRUMENTS } from '@/lib/instruments';
-import { getActiveSignals, getPlatformStatsGate, getSignalEvents } from '@/lib/v2-data';
+import { getActiveSignals, getPlatformStatsGate, getSignalCounts, getSignalEvents } from '@/lib/v2-data';
+import Breadcrumb from '@/components/v2/Breadcrumb';
+import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import SignalCard from '@/components/v2/SignalCard';
 import SignalJourney from '@/components/v2/SignalJourney';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
@@ -62,13 +64,22 @@ const FAQ = [
 ];
 
 export default async function AiTradingPage() {
-  const [signals, platformGate] = await Promise.all([getActiveSignals(), getPlatformStatsGate()]);
+  const [signals, platformGate, counts] = await Promise.all([
+    getActiveSignals(),
+    getPlatformStatsGate(),
+    getSignalCounts(),
+  ]);
   const example = signals[0] ?? null;
   const exampleEvents = example ? await getSignalEvents(example.signal_uid) : [];
   const gateReady = (platformGate.stats?.sample_size ?? 0) >= 30;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12 px-4 py-10">
+    <>
+      <Breadcrumb items={[{ label: 'AI Trading' }]} />
+      <div className="grid grid-cols-[224px_1fr]">
+        <MarketsSidebar active="ai-trading" counts={counts.byClass} />
+
+        <div className="min-w-0 space-y-12 px-6 py-6">
       {/* ── Hero ── */}
       <header>
         <p className="text-[11px] uppercase tracking-widest text-v2-accent">● Smart Asset Bot — Live</p>
@@ -217,6 +228,8 @@ export default async function AiTradingPage() {
           ))}
         </div>
       </section>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
