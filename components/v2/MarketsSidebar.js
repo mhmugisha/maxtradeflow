@@ -15,6 +15,7 @@ const DISCOVER = [
   { label: 'All Signals', href: '/v2/signals' },
   { label: 'Sessions', href: '/v2/tools/session-converter' },
   { label: 'Calendar', href: '/v2/calendar' },
+  { label: 'Education', href: '/v2/education', key: 'education' },
 ];
 
 // All 8 calculators, from the tools registry. Active key: `tools:<slug>`
@@ -85,7 +86,12 @@ function SidebarBody({ active, counts }) {
 
       <SectionLabel>Discover</SectionLabel>
       {DISCOVER.map((d) => (
-        <Item key={d.href} href={d.href} label={d.label} active={false} />
+        <Item
+          key={d.href}
+          href={d.href}
+          label={d.label}
+          active={d.key ? active === d.key : false}
+        />
       ))}
 
       <SectionLabel>Tools</SectionLabel>
