@@ -18,10 +18,16 @@ export const metadata = {
 };
 
 export default async function EducationHubPage() {
-  const [articles, counts] = await Promise.all([
+  // Education hub shows both 'education' (long-form) and 'guide' (tool how-tos)
+  // categories. Two parallel reads merged by created_at desc — same shape the
+  // single-category fetch returns, so EducationList stays unchanged.
+  const [education, guides, counts] = await Promise.all([
     getArticlesByCategory('education', 100),
+    getArticlesByCategory('guide', 100),
     getSignalCounts(),
   ]);
+  const articles = [...education, ...guides]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   return (
     <>

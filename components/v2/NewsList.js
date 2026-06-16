@@ -1,23 +1,21 @@
 'use client';
 
-// components/v2/EducationList.js — client-side filterable article grid for
-// the v2 Education hub. Articles are pre-fetched server-side and filtered
-// in memory by category — the schema has no `subcategory` column (the v1
-// EducationList filters on it and silently shows nothing in prod; the v2
-// tabs use the real top-level category values instead: 'education' and
-// 'guide').
+// components/v2/NewsList.js — client-side filterable article grid for the
+// v2 News hub. Mirrors EducationList structurally (same card design + 200wpm
+// read-time calc) so the two hubs stay visually consistent until cutover.
+// Filters by article.category. The 'news' category is empty in the DB as of
+// branch creation — the empty state renders honestly until content arrives;
+// the Market News / Analysis tabs scaffold for the eventual split.
 
 import { useState } from 'react';
 import Link from 'next/link';
 
 const CATEGORIES = [
   { key: 'all', label: 'All' },
-  { key: 'education', label: 'Education' },
-  { key: 'guide', label: 'Tool Guides' },
+  { key: 'news', label: 'Market News' },
+  { key: 'analysis', label: 'Analysis' },
 ];
 
-// 200 wpm — matches the v1 calculation so read times don't drift between
-// the two hubs while both exist.
 function readTimeMinutes(content) {
   if (!content) return 1;
   const words = content.replace(/<[^>]*>/g, '').trim().split(/\s+/).filter(Boolean).length;
@@ -28,7 +26,7 @@ function ArticleCard({ article }) {
   const minutes = readTimeMinutes(article.content);
   return (
     <Link
-      href={`/education/${article.slug}`}
+      href={`/news/${article.slug}`}
       className="flex h-full flex-col rounded-md border border-v2-line bg-v2-surface p-4 transition-colors hover:border-v2-line-strong"
     >
       {article.category && (
@@ -52,7 +50,7 @@ function ArticleCard({ article }) {
   );
 }
 
-export default function EducationList({ articles }) {
+export default function NewsList({ articles }) {
   const [filter, setFilter] = useState('all');
   const visible = filter === 'all'
     ? articles

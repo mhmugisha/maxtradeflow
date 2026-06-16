@@ -17,6 +17,7 @@ const DISCOVER = [
   { label: 'Sessions', href: '/v2/tools/session-converter' },
   { label: 'Calendar', href: '/v2/calendar' },
   { label: 'Education', href: '/v2/education', key: 'education' },
+  { label: 'News', href: '/v2/news', key: 'news' },
 ];
 
 // All 8 calculators, from the tools registry. Active key: `tools:<slug>`
