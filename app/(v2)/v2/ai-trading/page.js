@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { INSTRUMENTS } from '@/lib/instruments';
-import { getActiveSignals, getPlatformStatsGate, getSignalCounts, getSignalEvents } from '@/lib/v2-data';
+import { getActiveSignals, getPlatformStatsGate, getSignalCounts, getSignalEvents, getScreener } from '@/lib/v2-data';
 import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import SignalCard from '@/components/v2/SignalCard';
@@ -63,15 +63,43 @@ const FAQ = [
   },
 ];
 
+// Opportunity Board sort: TRADE first, then WATCH, then AVOID, then
+// instruments the bot didn't include this scan. Within each tier, TFS desc.
+const ACTION_RANK = { TRADE: 0, WATCH: 1, AVOID: 2 };
+
 export default async function AiTradingPage() {
-  const [signals, platformGate, counts] = await Promise.all([
+  const [signals, platformGate, counts, screener] = await Promise.all([
     getActiveSignals(),
     getPlatformStatsGate(),
     getSignalCounts(),
+    getScreener(),
   ]);
   const example = signals[0] ?? null;
   const exampleEvents = example ? await getSignalEvents(example.signal_uid) : [];
   const gateReady = (platformGate.stats?.sample_size ?? 0) >= 30;
+
+  // Join all 21 registered instruments with the live screener so the board
+  // always renders 21 rows even if a particular instrument is missing from
+  // the bot's response (rare; shows score "—").
+  const screenerBySymbol = new Map(screener.map((s) => [s.symbol, s]));
+  const board = INSTRUMENTS.map((i) => {
+    const s = screenerBySymbol.get(i.symbol);
+    return {
+      symbol: i.symbol,
+      display: i.display,
+      slug: i.slug,
+      assetClass: i.assetClass,
+      score: s?.score ?? null,
+      adx: s?.adx ?? null,
+      direction: s?.direction ?? null,
+      action: s?.action ?? null,
+    };
+  }).sort((a, b) => {
+    const ar = ACTION_RANK[a.action] ?? 3;
+    const br = ACTION_RANK[b.action] ?? 3;
+    if (ar !== br) return ar - br;
+    return (b.score ?? -1) - (a.score ?? -1);
+  });
 
   return (
     <>
@@ -79,12 +107,12 @@ export default async function AiTradingPage() {
       <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active="ai-trading" counts={counts.byClass} />
 
-        <div className="min-w-0 space-y-12 px-6 py-6">
+        <div className="min-w-0 space-y-8 px-6 py-4">
       {/* ── Hero ── */}
       <header>
         <p className="text-[11px] uppercase tracking-widest text-v2-accent">● Smart Asset Bot — Live</p>
         <h1 className="mt-2 font-v2-display text-3xl font-bold text-v2-text">AI Trading</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-v2-text-muted">
+        <p className="mt-3 text-sm leading-relaxed text-v2-text-muted">
           Smart Asset Bot scans <span className="v2-num text-v2-accent">{INSTRUMENTS.length}</span> instruments
           — forex, indices, gold and crypto — on a continuous scan cycle. A signal is a complete,
           immutable trade plan: direction, entry, stop loss, take profit and the reasoning behind it,
@@ -129,6 +157,75 @@ export default async function AiTradingPage() {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* ── Opportunity Board ── */}
+      <section>
+        <div className="mb-3">
+          <h2 className="font-v2-display text-lg font-semibold text-v2-text">Opportunity Board</h2>
+          <p className="mt-1 text-xs text-v2-text-muted">
+            All {INSTRUMENTS.length} instruments ranked by TradeFlow Score™ — updates every 60 seconds.
+          </p>
+        </div>
+        {screener.length === 0 ? (
+          <p className="rounded-md border border-v2-line bg-v2-surface p-4 text-sm text-v2-text-muted">
+            Scanner refreshes every 60s — data unavailable.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-md border border-v2-line">
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_88px_88px_72px_88px] items-center gap-2 border-b border-v2-line bg-v2-surface px-3 py-2 text-[10px] uppercase tracking-wide text-v2-text-faint">
+              <span>Instrument</span>
+              <span>Direction</span>
+              <span className="text-right">TFS</span>
+              <span className="text-right">ADX</span>
+              <span className="text-right">Action</span>
+            </div>
+            {board.map((r) => {
+              const isTrade = r.action === 'TRADE';
+              const adxLow = r.adx != null && r.adx < 25;
+              return (
+                <Link
+                  key={r.symbol}
+                  href={`/v2/markets/${r.assetClass}/${r.slug}`}
+                  className={`grid grid-cols-[1fr_88px_88px_72px_88px] items-center gap-2 border-b border-v2-line px-3 py-2 text-xs transition-colors last:border-0 ${
+                    isTrade ? 'bg-v2-accent-soft hover:bg-v2-accent-soft' : 'hover:bg-v2-surface'
+                  }`}
+                >
+                  <span className="font-medium text-v2-text">{r.display}</span>
+                  <span
+                    className={
+                      r.direction === 'LONG'
+                        ? 'text-v2-bullish'
+                        : r.direction === 'SHORT'
+                          ? 'text-v2-bearish'
+                          : 'text-v2-text-faint'
+                    }
+                  >
+                    {r.direction ?? '—'}
+                  </span>
+                  <span className="v2-num text-right font-bold text-v2-text">
+                    {r.score != null ? r.score : '—'}
+                  </span>
+                  <span className={`v2-num text-right ${adxLow ? 'text-v2-bearish' : 'text-v2-text-muted'}`}>
+                    {r.adx != null ? r.adx.toFixed(1) : '—'}
+                  </span>
+                  <span className="text-right">
+                    {r.action === 'TRADE' && (
+                      <span className="rounded bg-v2-bullish-soft px-1.5 py-0.5 text-[10px] font-medium text-v2-bullish">TRADE</span>
+                    )}
+                    {r.action === 'WATCH' && (
+                      <span className="rounded border border-v2-line-strong px-1.5 py-0.5 text-[10px] font-medium text-v2-text-muted">WATCH</span>
+                    )}
+                    {(!r.action || r.action === 'AVOID') && (
+                      <span className="text-[10px] text-v2-text-faint">—</span>
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ── Methodology ── */}
