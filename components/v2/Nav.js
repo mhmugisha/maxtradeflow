@@ -5,11 +5,11 @@
 import Link from 'next/link';
 
 const NAV_LINKS = [
-  { label: 'Markets', href: '/v2/markets' },
-  { label: 'Education', href: '/v2/education' },
-  { label: 'Tools', href: '/v2/tools' },
-  { label: 'AI Trading', href: '/v2/ai-trading' },
-  { label: 'News', href: '/v2/news' },
+  { label: 'Markets', href: '/markets' },
+  { label: 'Education', href: '/education' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'AI Trading', href: '/ai-trading' },
+  { label: 'News', href: '/news' },
 ];
 
 export default function Nav() {
@@ -19,7 +19,7 @@ export default function Nav() {
       style={{ height: 'var(--v2-nav-h)' }}
     >
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
-        <Link href="/v2" className="font-v2-display text-lg font-bold text-v2-text">
+        <Link href="/" className="font-v2-display text-lg font-bold text-v2-text">
           Max<span className="text-v2-accent">Trade</span>Flow
         </Link>
         <div className="hidden items-center gap-1 md:flex">
@@ -35,7 +35,7 @@ export default function Nav() {
         </div>
         {/* Pro Trader Workspace button — "Sign in" until Phase B */}
         <Link
-          href="/v2/workspace"
+          href="/workspace"
           className="rounded bg-v2-accent px-3.5 py-1.5 text-sm font-medium text-v2-bg transition-opacity hover:opacity-90"
         >
           Sign in

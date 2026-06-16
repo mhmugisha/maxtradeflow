@@ -5,12 +5,12 @@ import Link from 'next/link';
 import RiskDisclaimer from './RiskDisclaimer';
 
 const FOOTER_LINKS = [
-  { label: 'Markets', href: '/v2/markets' },
-  { label: 'Education', href: '/v2/education' },
-  { label: 'Tools', href: '/v2/tools' },
-  { label: 'AI Trading', href: '/v2/ai-trading' },
-  { label: 'News', href: '/v2/news' },
-  { label: 'Risk Disclosure', href: '/v2/disclaimer' },
+  { label: 'Markets', href: '/markets' },
+  { label: 'Education', href: '/education' },
+  { label: 'Tools', href: '/tools' },
+  { label: 'AI Trading', href: '/ai-trading' },
+  { label: 'News', href: '/news' },
+  { label: 'Risk Disclosure', href: '/disclaimer' },
 ];
 
 export default function Footer() {

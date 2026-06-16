@@ -15,7 +15,7 @@ export default function ToolShell({ slug, counts, children }) {
 
   return (
     <>
-      <Breadcrumb items={[{ label: 'Tools', href: '/v2/tools' }, { label: tool.name }]} />
+      <Breadcrumb items={[{ label: 'Tools', href: '/tools' }, { label: tool.name }]} />
       <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={`tools:${slug}`} counts={counts?.byClass} />
 
@@ -36,7 +36,7 @@ export default function ToolShell({ slug, counts, children }) {
                 {related.map((r) => (
                   <Link
                     key={r.slug}
-                    href={`/v2/tools/${r.slug}`}
+                    href={`/tools/${r.slug}`}
                     className="flex min-h-11 items-center gap-2 rounded-md border border-v2-line bg-v2-surface px-3 text-sm text-v2-text-muted transition-colors hover:border-v2-line-strong hover:text-v2-text"
                   >
                     <span aria-hidden>{r.icon}</span>

@@ -108,10 +108,10 @@ export default async function MarketsHubPage() {
                 <div className="mt-1 font-v2-display text-sm font-semibold text-v2-text">Gold — XAUUSD</div>
                 <div className="text-xs text-v2-text-faint">Precious metal · Most traded commodity</div>
                 <div className="mt-3 flex gap-2">
-                  <Link href="/v2/markets/commodities/xauusd" className="rounded bg-v2-gold px-3 py-1.5 text-xs font-medium text-v2-bg transition-opacity hover:opacity-90">
+                  <Link href="/markets/commodities/xauusd" className="rounded bg-v2-gold px-3 py-1.5 text-xs font-medium text-v2-bg transition-opacity hover:opacity-90">
                     View signals
                   </Link>
-                  <Link href="/v2/markets/commodities/xauusd" className="rounded border border-v2-gold-border px-3 py-1.5 text-xs text-v2-gold transition-colors hover:bg-v2-gold-soft">
+                  <Link href="/markets/commodities/xauusd" className="rounded border border-v2-gold-border px-3 py-1.5 text-xs text-v2-gold transition-colors hover:bg-v2-gold-soft">
                     Full chart
                   </Link>
                 </div>
@@ -210,7 +210,7 @@ export default async function MarketsHubPage() {
           <section>
             <SectionHeading
               title="Active AI Signals — All Markets"
-              action={<Link href="/v2/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>}
+              action={<Link href="/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>}
             />
             {signals.length === 0 ? (
               <p className="text-sm text-v2-text-muted">No active signals right now. The bot publishes only setups scoring at the gate — quiet periods are honest, not hidden.</p>
@@ -218,7 +218,7 @@ export default async function MarketsHubPage() {
               <div className={`${SWIPE_ROW} md:grid-cols-4`}>
                 {signals.map((s) => (
                   <div key={s.signal_uid} className={SWIPE_CARD}>
-                    <SignalCard signal={s} classTag href={`/v2/signals/${s.signal_uid}`} />
+                    <SignalCard signal={s} classTag href={`/signals/${s.signal_uid}`} />
                   </div>
                 ))}
               </div>

@@ -12,19 +12,19 @@ import { ASSET_CLASSES } from './assetClassMeta';
 import { TOOLS as TOOL_PAGES } from './tools/toolsMeta';
 
 const DISCOVER = [
-  { label: 'All Signals', href: '/v2/signals', key: 'signals' },
-  { label: 'AI Trading', href: '/v2/ai-trading', key: 'ai-trading' },
-  { label: 'Sessions', href: '/v2/tools/session-converter' },
-  { label: 'Calendar', href: '/v2/calendar' },
-  { label: 'Education', href: '/v2/education', key: 'education' },
-  { label: 'News', href: '/v2/news', key: 'news' },
+  { label: 'All Signals', href: '/signals', key: 'signals' },
+  { label: 'AI Trading', href: '/ai-trading', key: 'ai-trading' },
+  { label: 'Sessions', href: '/tools/session-converter' },
+  { label: 'Calendar', href: '/calendar' },
+  { label: 'Education', href: '/education', key: 'education' },
+  { label: 'News', href: '/news', key: 'news' },
 ];
 
 // All 8 calculators, from the tools registry. Active key: `tools:<slug>`
 // (passed by ToolShell).
 const TOOLS = TOOL_PAGES.map((t) => ({
   label: t.sidebarLabel,
-  href: `/v2/tools/${t.slug}`,
+  href: `/tools/${t.slug}`,
   key: `tools:${t.slug}`,
 }));
 
@@ -58,7 +58,7 @@ function SidebarBody({ active, counts }) {
   return (
     <nav className="pb-4">
       <SectionLabel>Markets</SectionLabel>
-      <Item href="/v2/markets" label="Overview" active={active === 'overview'} />
+      <Item href="/markets" label="Overview" active={active === 'overview'} />
       {ASSET_CLASSES.map((c) => {
         const n = counts?.[c.key] ?? 0;
         return (
@@ -79,7 +79,7 @@ function SidebarBody({ active, counts }) {
 
       <SectionLabel>Featured</SectionLabel>
       <Link
-        href="/v2/markets/commodities/xauusd"
+        href="/markets/commodities/xauusd"
         className="flex min-h-11 items-center justify-between gap-2 border-l-2 border-transparent px-3 py-2 text-sm text-v2-gold transition-colors hover:bg-v2-gold-soft md:min-h-0 md:py-1.5"
       >
         <span>🥇 Gold</span>

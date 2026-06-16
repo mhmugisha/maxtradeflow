@@ -54,7 +54,7 @@ export default function ArchiveFilters() {
     if (value) next.set(key, value);
     else next.delete(key);
     next.delete('page'); // filters reset pagination
-    router.replace(`/v2/signals${next.size ? `?${next}` : ''}`);
+    router.replace(`/signals${next.size ? `?${next}` : ''}`);
   };
 
   return (

@@ -40,7 +40,7 @@ const fmtWhen = (iso) => {
 function toDisplayRow(s) {
   const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.GENERATED;
   return {
-    href: `/v2/signals/${s.signal_uid}`,
+    href: `/signals/${s.signal_uid}`,
     when: fmtWhen(s.generated_at),
     instrument: displayFor(s.ticker),
     direction: s.direction,
@@ -114,7 +114,7 @@ export default async function SignalsArchivePage({ searchParams }) {
     if (assetClass) q.set('class', assetClass);
     if (status) q.set('status', status);
     if (p > 1) q.set('page', String(p));
-    return `/v2/signals${q.size ? `?${q}` : ''}`;
+    return `/signals${q.size ? `?${q}` : ''}`;
   };
 
   return (

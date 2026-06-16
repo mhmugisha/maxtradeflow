@@ -70,10 +70,10 @@ export default async function HomePage() {
           commodities, and crypto. No opinion — just data.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/v2/markets" className="rounded bg-v2-accent px-4 py-2 text-sm font-medium text-v2-bg transition-opacity hover:opacity-90">
+          <Link href="/markets" className="rounded bg-v2-accent px-4 py-2 text-sm font-medium text-v2-bg transition-opacity hover:opacity-90">
             View Live Signals
           </Link>
-          <Link href="/v2/ai-trading" className="rounded border border-v2-line-strong px-4 py-2 text-sm text-v2-accent transition-colors hover:bg-v2-accent-soft">
+          <Link href="/ai-trading" className="rounded border border-v2-line-strong px-4 py-2 text-sm text-v2-accent transition-colors hover:bg-v2-accent-soft">
             How It Works
           </Link>
         </div>
@@ -111,7 +111,7 @@ export default async function HomePage() {
         <div className="rounded-md border border-v2-line bg-v2-surface p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-medium text-v2-text">Ahead — Major Scheduled Events</h2>
-            <Link href="/v2/calendar" className="text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">Full calendar →</Link>
+            <Link href="/calendar" className="text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">Full calendar →</Link>
           </div>
           {weekEvents.length === 0 ? (
             <p className="text-xs text-v2-text-faint">No major scheduled events in the next 10 days.</p>
@@ -139,7 +139,7 @@ export default async function HomePage() {
             <p className="text-[10px] uppercase tracking-widest text-v2-text-faint">Auto-published by Smart Asset Bot</p>
             <h2 className="font-v2-display text-lg font-semibold text-v2-text">Latest Market Signals</h2>
           </div>
-          <Link href="/v2/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>
+          <Link href="/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>
         </div>
         {topSignals.length === 0 ? (
           <p className="text-sm text-v2-text-muted">No active signals right now — quiet periods are shown, not filled.</p>
@@ -147,7 +147,7 @@ export default async function HomePage() {
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
             {topSignals.map((s) => (
               <div key={s.signal_uid} className="w-60 shrink-0 snap-start md:w-auto">
-                <SignalCard signal={s} classTag href={`/v2/signals/${s.signal_uid}`} />
+                <SignalCard signal={s} classTag href={`/signals/${s.signal_uid}`} />
               </div>
             ))}
           </div>
@@ -173,7 +173,7 @@ export default async function HomePage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-v2-display text-lg font-semibold text-v2-text">Markets</h2>
-          <Link href="/v2/markets" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">Markets hub →</Link>
+          <Link href="/markets" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">Markets hub →</Link>
         </div>
         <ClassCards counts={counts.byClass} />
       </section>
@@ -210,7 +210,7 @@ export default async function HomePage() {
                 Outcome tracking is new; numbers appear here when the sample is real, not before.
               </p>
             )}
-            <Link href="/v2/ai-trading" className="mt-3 inline-block text-xs text-v2-accent hover:underline">
+            <Link href="/ai-trading" className="mt-3 inline-block text-xs text-v2-accent hover:underline">
               How signals are scored and tracked →
             </Link>
           </div>

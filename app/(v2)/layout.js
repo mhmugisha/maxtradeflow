@@ -21,12 +21,6 @@ import { OrganizationJsonLd } from '@/components/v2/JsonLd';
 // root layout, untouched.
 const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
 
-// Pre-cutover /v2/* pages must never be indexed (they would be duplicates of
-// the future canonical routes). The cutover session removes this.
-export const metadata = {
-  robots: { index: false, follow: false },
-};
-
 export default function V2Layout({ children }) {
   return (
     <div

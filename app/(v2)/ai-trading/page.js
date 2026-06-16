@@ -187,7 +187,7 @@ export default async function AiTradingPage() {
               return (
                 <Link
                   key={r.symbol}
-                  href={`/v2/markets/${r.assetClass}/${r.slug}`}
+                  href={`/markets/${r.assetClass}/${r.slug}`}
                   className={`grid grid-cols-[1fr_88px_88px_72px_88px] items-center gap-2 border-b border-v2-line px-3 py-2 text-xs transition-colors last:border-0 ${
                     isTrade ? 'bg-v2-accent-soft hover:bg-v2-accent-soft' : 'hover:bg-v2-surface'
                   }`}
@@ -254,7 +254,7 @@ export default async function AiTradingPage() {
           {example && (
             <>
               {' '}Below: the REAL current state of the most recent signal —{' '}
-              <Link href={`/v2/signals/${example.signal_uid}`} className="text-v2-accent hover:underline">
+              <Link href={`/signals/${example.signal_uid}`} className="text-v2-accent hover:underline">
                 {example.ticker} {example.direction}
               </Link>
               .
@@ -272,7 +272,7 @@ export default async function AiTradingPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-v2-display text-lg font-semibold text-v2-text">Live right now</h2>
-          <Link href="/v2/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>
+          <Link href="/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">All signals →</Link>
         </div>
         {signals.length === 0 ? (
           <p className="text-sm text-v2-text-muted">No active signals at the moment.</p>
@@ -280,7 +280,7 @@ export default async function AiTradingPage() {
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
             {signals.slice(0, 4).map((s) => (
               <div key={s.signal_uid} className="w-60 shrink-0 snap-start md:w-auto">
-                <SignalCard signal={s} classTag href={`/v2/signals/${s.signal_uid}`} />
+                <SignalCard signal={s} classTag href={`/signals/${s.signal_uid}`} />
               </div>
             ))}
           </div>

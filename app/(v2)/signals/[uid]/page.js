@@ -87,16 +87,16 @@ export default async function SignalArticlePage({ params }) {
   const long = signal.direction === 'LONG';
   const banner = STATUS_BANNER[signal.status] ?? STATUS_BANNER.GENERATED;
   const invalidation = events.find((e) => e.event_type === 'INVALIDATED')?.reason ?? null;
-  const instrumentHref = l4Href(inst) ?? cls?.href ?? '/v2/markets';
+  const instrumentHref = l4Href(inst) ?? cls?.href ?? '/markets';
   const analysisBody = stripMarkdownArtifacts(article?.content);
   const analysisExcerpt = stripMarkdownArtifacts(article?.excerpt);
 
   return (
     <>
-      <ArticleJsonLd signal={signal} path={`/v2/signals/${uid}`} />
+      <ArticleJsonLd signal={signal} path={`/signals/${uid}`} />
       <Breadcrumb
         items={[
-          { label: 'Markets', href: '/v2/markets' },
+          { label: 'Markets', href: '/markets' },
           ...(cls ? [{ label: cls.name, href: cls.href }] : []),
           { label: `${signal.ticker} signal · ${fmtDateLong(signal.generated_at)}` },
         ]}

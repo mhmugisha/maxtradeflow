@@ -39,7 +39,7 @@ export default async function ToolsHubPage() {
             {TOOLS.map((tool) => (
               <Link
                 key={tool.slug}
-                href={`/v2/tools/${tool.slug}`}
+                href={`/tools/${tool.slug}`}
                 className="group flex flex-col rounded-md border border-v2-line bg-v2-surface p-4 transition-colors hover:border-v2-line-strong"
               >
                 <div className="mb-2 flex items-start gap-3">

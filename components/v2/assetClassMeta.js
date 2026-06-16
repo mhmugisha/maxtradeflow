@@ -19,7 +19,7 @@ export const ASSET_CLASSES = [
     icon: '💱',
     accentBar: 'bg-v2-accent',
     desc: `${forexCount} currency pairs`,
-    href: '/v2/markets/forex',
+    href: '/markets/forex',
   },
   {
     key: 'indices',
@@ -27,7 +27,7 @@ export const ASSET_CLASSES = [
     icon: '📈',
     accentBar: 'bg-v2-bullish',
     desc: indices,
-    href: '/v2/markets/indices',
+    href: '/markets/indices',
   },
   {
     key: 'commodities',
@@ -35,7 +35,7 @@ export const ASSET_CLASSES = [
     icon: '🥇',
     accentBar: 'bg-v2-gold',
     desc: 'Gold + more coming',
-    href: '/v2/markets/commodities',
+    href: '/markets/commodities',
   },
   {
     key: 'crypto',
@@ -43,7 +43,7 @@ export const ASSET_CLASSES = [
     icon: '₿',
     accentBar: 'bg-v2-crypto',
     desc: `${cryptoTop} +${cryptoMore}`,
-    href: '/v2/markets/crypto',
+    href: '/markets/crypto',
   },
   {
     key: 'stocks',
@@ -52,7 +52,7 @@ export const ASSET_CLASSES = [
     accentBar: 'bg-v2-stocks',
     desc: 'Coming soon',
     comingSoon: true,
-    href: '/v2/markets/stocks',
+    href: '/markets/stocks',
   },
 ];
 
@@ -65,5 +65,5 @@ export function classMeta(key) {
  *  serves all instruments listed in lib/instruments.js for that class. */
 export function l4Href(inst) {
   if (!inst) return null;
-  return `/v2/markets/${inst.assetClass}/${inst.slug}`;
+  return `/markets/${inst.assetClass}/${inst.slug}`;
 }

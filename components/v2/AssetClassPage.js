@@ -160,7 +160,7 @@ export default async function AssetClassPage({ classKey }) {
 
   return (
     <>
-      <Breadcrumb items={[{ label: 'Markets', href: '/v2/markets' }, { label: meta.name }]} />
+      <Breadcrumb items={[{ label: 'Markets', href: '/markets' }, { label: meta.name }]} />
       <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={classKey} counts={counts.byClass} />
 
@@ -187,7 +187,7 @@ export default async function AssetClassPage({ classKey }) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-v2-display text-base font-semibold text-v2-text">{meta.name} Signals</h2>
-              <Link href="/v2/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">
+              <Link href="/signals" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">
                 All signals →
               </Link>
             </div>
@@ -200,7 +200,7 @@ export default async function AssetClassPage({ classKey }) {
               <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
                 {clsSignals.slice(0, 3).map((s) => (
                   <div key={s.signal_uid} className="w-64 shrink-0 snap-start md:w-auto">
-                    <SignalCard signal={s} href={`/v2/signals/${s.signal_uid}`} />
+                    <SignalCard signal={s} href={`/signals/${s.signal_uid}`} />
                   </div>
                 ))}
               </div>
@@ -244,7 +244,7 @@ export default async function AssetClassPage({ classKey }) {
               <h2 className="font-v2-display text-base font-semibold text-v2-text">
                 Major scheduled events — {meta.name}
               </h2>
-              <Link href="/v2/calendar" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">
+              <Link href="/calendar" className="text-xs text-v2-text-muted transition-colors hover:text-v2-accent">
                 Full calendar →
               </Link>
             </div>

@@ -47,7 +47,7 @@ export default function DisclaimerPage() {
 
       <p className="border-t border-v2-line pt-4 text-xs text-v2-text-faint">
         Questions about how a number on this site was computed? Every statistic names its source
-        and sample. Start at <Link href="/v2/ai-trading" className="text-v2-accent hover:underline">How It Works</Link>.
+        and sample. Start at <Link href="/ai-trading" className="text-v2-accent hover:underline">How It Works</Link>.
       </p>
     </div>
   );

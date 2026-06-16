@@ -159,7 +159,7 @@ export default async function InstrumentPage({ symbol }) {
   const gateReady = (statsGate.stats?.sample_size ?? 0) >= 30;
 
   const breadcrumbItems = [
-    { label: 'Markets', href: '/v2/markets' },
+    { label: 'Markets', href: '/markets' },
     { label: cls.name, href: cls.href },
     { label: inst.symbol },
   ];
@@ -203,7 +203,7 @@ export default async function InstrumentPage({ symbol }) {
             <div className="flex flex-col">
               {scannerRows.map((r) => {
                 const isCurrent = r.symbol === inst.symbol;
-                const href = `/v2/markets/${inst.assetClass}/${r.slug}`;
+                const href = `/markets/${inst.assetClass}/${r.slug}`;
                 return (
                   <Link
                     key={r.symbol}
@@ -437,7 +437,7 @@ export default async function InstrumentPage({ symbol }) {
         {!active && journeySignal && (
           <p className="text-sm text-v2-text-muted">
             No active signal on {inst.display} right now — last signal {fmtDate(journeySignal.generated_at)} (
-            <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="text-v2-accent hover:underline">view</Link>
+            <Link href={`/signals/${journeySignal.signal_uid}`} className="text-v2-accent hover:underline">view</Link>
             ).
           </p>
         )}
@@ -447,7 +447,7 @@ export default async function InstrumentPage({ symbol }) {
             <div className="mb-2 text-[10px] uppercase tracking-widest text-v2-text-faint">Analysis</div>
             <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
             {journeySignal && (
-              <Link href={`/v2/signals/${journeySignal.signal_uid}`} className="mt-2 inline-block text-xs text-v2-accent hover:underline">
+              <Link href={`/signals/${journeySignal.signal_uid}`} className="mt-2 inline-block text-xs text-v2-accent hover:underline">
                 Read full analysis →
               </Link>
             )}
@@ -522,7 +522,7 @@ export default async function InstrumentPage({ symbol }) {
             limit={3}
             emptyText={`No major scheduled events for ${inst.display} in the next 14 days.`}
           />
-          <Link href="/v2/calendar" className="mt-2 inline-block text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">
+          <Link href="/calendar" className="mt-2 inline-block text-[11px] text-v2-text-muted transition-colors hover:text-v2-accent">
             Full calendar →
           </Link>
         </section>

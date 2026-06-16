@@ -35,7 +35,7 @@ export default async function CalendarPage() {
 
   return (
     <>
-      <Breadcrumb items={[{ label: 'Markets', href: '/v2/markets' }, { label: 'Economic Calendar' }]} />
+      <Breadcrumb items={[{ label: 'Markets', href: '/markets' }, { label: 'Economic Calendar' }]} />
       <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active="overview" counts={counts.byClass} />
 
