@@ -1,29 +1,26 @@
-// /v2/signals/[uid] — the immutable signal article per
-// docs/mockups/Signal_Article.png (Phase A Session 3 Task 2). Server-rendered
-// from the signals table by signal_uid; unknown/malformed uid → 404. The page
-// content never changes after close (§0.3) — only the status banner reflects
-// the recorded outcome.
+// /signals/[uid] — the immutable signal article. Server-rendered from the
+// signals table by signal_uid; unknown/malformed uid → 404. Content never
+// changes after close (§0.3) — only the status chip reflects the outcome.
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getInstrument, formatInstrumentPrice, displayFor } from '@/lib/instruments';
 import {
-  getSignalByUid, getSignalEvents, getArticleForSignal, getSignalCounts, UUID_RE,
+  getSignalByUid, getSignalEvents, getActiveSignals, getSignalCounts, UUID_RE,
 } from '@/lib/v2-data';
-import { looksLikeHtml, sanitizeAnalysisHtml, stripMarkdownArtifacts } from '@/lib/sanitize-analysis';
 import { classMeta, l4Href } from '@/components/v2/assetClassMeta';
 import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import SignalJourney from '@/components/v2/SignalJourney';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
 import { ArticleJsonLd } from '@/components/v2/JsonLd';
+import TradingViewChart from '@/components/TradingViewChart';
 
 export const revalidate = 60;
 
-// Documented mapping: reasons[] codes → human sentences (task 2). The bot
-// usually sends a specific human label with each code (e.g. "ADX 30.6
-// confirms directional momentum") — that REAL label is preferred; these
-// sentences are the fallback when a label is missing. Codes per §A0-4.
+// Bot-supplied reason labels are preferred when present (e.g. "ADX 30.6
+// confirms directional momentum"); these are the fallback for missing
+// labels. Codes per §A0-4.
 const REASON_SENTENCES = {
   TREND_ALIGNED: 'Price is moving with the prevailing trend across the scanned timeframes.',
   EMA_STACK: 'The EMAs are stacked in trend order, confirming directional structure.',
@@ -35,18 +32,51 @@ const REASON_SENTENCES = {
   VOLATILITY_OK: 'Volatility is within a tradable range for the strategy.',
 };
 
-const STATUS_BANNER = {
+const STATUS_CHIP = {
   GENERATED: { text: 'Awaiting entry trigger', cls: 'border-v2-line text-v2-text-muted' },
-  TRIGGERED: { text: 'Signal active — outcome pending', cls: 'border-v2-line-strong bg-v2-accent-soft text-v2-accent' },
-  ACTIVE: { text: 'Signal active — outcome pending', cls: 'border-v2-line-strong bg-v2-accent-soft text-v2-accent' },
-  TP_HIT: { text: 'Outcome: Take Profit hit', cls: 'border-v2-bullish bg-v2-bullish-soft text-v2-bullish' },
-  SL_HIT: { text: 'Outcome: Stop Loss hit', cls: 'border-v2-bearish bg-v2-bearish-soft text-v2-bearish' },
-  EXPIRED: { text: 'Expired — entry was never triggered within 7 days', cls: 'border-v2-line text-v2-text-muted' },
-  INVALIDATED: { text: 'Invalidated — withdrawn before entry', cls: 'border-v2-line text-v2-text-muted' },
+  TRIGGERED: { text: 'Active', cls: 'border-v2-line-strong bg-v2-accent-soft text-v2-accent' },
+  ACTIVE: { text: 'Active', cls: 'border-v2-line-strong bg-v2-accent-soft text-v2-accent' },
+  TP_HIT: { text: 'Closed — TP hit', cls: 'border-v2-bullish bg-v2-bullish-soft text-v2-bullish' },
+  SL_HIT: { text: 'Closed — SL hit', cls: 'border-v2-bearish bg-v2-bearish-soft text-v2-bearish' },
+  EXPIRED: { text: 'Closed — expired', cls: 'border-v2-line text-v2-text-muted' },
+  INVALIDATED: { text: 'Closed — invalidated', cls: 'border-v2-line text-v2-text-muted' },
 };
+
+function tierFor(score) {
+  if (score == null) return null;
+  if (score >= 90) return 'Exceptional';
+  if (score >= 80) return 'Strong';
+  if (score >= 70) return 'Moderate';
+  return 'Watch';
+}
+
+// TradingView symbol mapping — mirrors components/v2/InstrumentPage.js so the
+// signal article shows the same chart conventions as the L4 instrument page.
+function tradingViewSymbol(inst) {
+  if (!inst) return null;
+  switch (inst.assetClass) {
+    case 'forex': return `FX:${inst.symbol}`;
+    case 'indices': {
+      const indexMap = { US500: 'OANDA:SPX500USD', NAS100: 'OANDA:NAS100USD', US30: 'OANDA:US30USD' };
+      return indexMap[inst.symbol] ?? `OANDA:${inst.symbol}USD`;
+    }
+    case 'commodities': return `OANDA:${inst.symbol}`;
+    case 'crypto': return `BINANCE:${inst.symbol}T`;
+    default: return inst.symbol;
+  }
+}
 
 const fmtDateLong = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '—';
+
+const fmtShortDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : '—';
+
+const fmtTimeUtc = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+};
 
 export async function generateMetadata({ params }) {
   const { uid } = await params;
@@ -59,12 +89,50 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function HeroBlock({ label, value, tone = 'text-v2-text', sub }) {
+function StatRow({ label, value, tone = 'text-v2-text' }) {
   return (
-    <div className="rounded-md border border-v2-line bg-v2-surface px-4 py-3 text-center">
-      <div className={`v2-num text-2xl font-semibold ${tone}`}>{value}</div>
-      <div className="mt-0.5 text-[10px] uppercase tracking-widest text-v2-text-faint">{label}</div>
-      {sub && <div className="text-[10px] text-v2-text-faint">{sub}</div>}
+    <div className="flex items-center justify-between border-b border-v2-line py-2 last:border-0">
+      <span className="text-xs text-v2-text-muted">{label}</span>
+      <span className={`v2-num text-sm font-medium ${tone}`}>{value}</span>
+    </div>
+  );
+}
+
+function RelatedSignalCard({ signal }) {
+  const long = signal.direction === 'LONG';
+  const tfs = signal.tradeflow_score ?? signal.displayScore;
+  return (
+    <div className="rounded-md border border-v2-line bg-v2-surface p-3">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="truncate text-xs font-medium text-v2-text">{displayFor(signal.ticker)}</span>
+        <span
+          className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${
+            long ? 'bg-v2-bullish-soft text-v2-bullish' : 'bg-v2-bearish-soft text-v2-bearish'
+          }`}
+        >
+          {signal.direction}
+        </span>
+      </div>
+      <div className="v2-num mb-2 text-[10px] text-v2-text-faint">
+        TFS {tfs ?? '—'} · ADX {signal.adx != null ? Number(signal.adx).toFixed(1) : '—'} · {fmtShortDate(signal.generated_at)}
+      </div>
+      <dl className="space-y-0.5">
+        <div className="flex items-center justify-between">
+          <dt className="text-[11px] text-v2-text-muted">Entry</dt>
+          <dd className="v2-num text-[11px] text-v2-text">{formatInstrumentPrice(signal.entry_price, signal.ticker)}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-[11px] text-v2-text-muted">SL</dt>
+          <dd className="v2-num text-[11px] text-v2-bearish">{formatInstrumentPrice(signal.stop_loss, signal.ticker)}</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-[11px] text-v2-text-muted">TP</dt>
+          <dd className="v2-num text-[11px] text-v2-bullish">{formatInstrumentPrice(signal.take_profit, signal.ticker)}</dd>
+        </div>
+      </dl>
+      <Link href={`/signals/${signal.signal_uid}`} className="mt-2 inline-block text-[11px] text-v2-accent hover:underline">
+        View signal →
+      </Link>
     </div>
   );
 }
@@ -76,20 +144,26 @@ export default async function SignalArticlePage({ params }) {
   const signal = await getSignalByUid(uid);
   if (!signal) notFound();
 
-  const [events, article, counts] = await Promise.all([
+  const [events, counts, activeSignals] = await Promise.all([
     getSignalEvents(uid),
-    getArticleForSignal(uid),
     getSignalCounts(),
+    getActiveSignals(),
   ]);
 
   const inst = getInstrument(signal.ticker);
   const cls = inst ? classMeta(inst.assetClass) : null;
   const long = signal.direction === 'LONG';
-  const banner = STATUS_BANNER[signal.status] ?? STATUS_BANNER.GENERATED;
+  const chip = STATUS_CHIP[signal.status] ?? STATUS_CHIP.GENERATED;
   const invalidation = events.find((e) => e.event_type === 'INVALIDATED')?.reason ?? null;
   const instrumentHref = l4Href(inst) ?? cls?.href ?? '/markets';
-  const analysisBody = stripMarkdownArtifacts(article?.content);
-  const analysisExcerpt = stripMarkdownArtifacts(article?.excerpt);
+  const tvSymbol = tradingViewSymbol(inst);
+  const displayScore = signal.tradeflow_score ?? signal.displayScore;
+  const tier = tierFor(displayScore);
+
+  const relatedSignals = activeSignals
+    .filter((s) => s.signal_uid !== uid)
+    .sort((a, b) => new Date(b.generated_at ?? 0) - new Date(a.generated_at ?? 0))
+    .slice(0, 3);
 
   return (
     <>
@@ -104,126 +178,158 @@ export default async function SignalArticlePage({ params }) {
       <div className="grid grid-cols-[224px_1fr]">
         <MarketsSidebar active={inst?.assetClass ?? 'overview'} counts={counts.byClass} />
 
-        <div className="min-w-0 space-y-8 px-6 py-6">
-          <header className="space-y-3">
-            <h1 className="font-v2-display text-2xl font-bold text-v2-text">
-              {displayFor(signal.ticker)}{' '}
-              <span className={long ? 'text-v2-bullish' : 'text-v2-bearish'}>{signal.direction}</span>{' '}
-              — Smart Asset Bot Signal · {fmtDateLong(signal.generated_at)}
-            </h1>
-            <div className={`inline-block rounded border px-3 py-1.5 text-xs font-medium ${banner.cls}`}>
-              {banner.text}
-              {invalidation && <span className="font-normal"> — {invalidation}</span>}
-            </div>
-          </header>
-
-          {/* ── Hero: TFS / direction / R:R / mode ── */}
-          <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {signal.tradeflow_score != null ? (
-              <HeroBlock label="TradeFlow Score" value={signal.tradeflow_score} tone="text-v2-accent" sub={signal.confidence != null ? `confidence ${signal.confidence}` : null} />
-            ) : (
-              <HeroBlock label="Score (legacy)" value={signal.score != null ? `${signal.score}/10` : '—'} tone="text-v2-accent" />
-            )}
-            <HeroBlock label="Direction" value={`${signal.direction} ${long ? '▲' : '▼'}`} tone={long ? 'text-v2-bullish' : 'text-v2-bearish'} />
-            <HeroBlock label="Risk : Reward" value={signal.rr_ratio != null ? `1 : ${signal.rr_ratio}` : '—'} />
-            <HeroBlock label="Entry mode" value={signal.entry_mode ?? '—'} tone="text-v2-text-muted" />
-          </section>
-
-          {/* ── Levels table ── */}
-          <section className="overflow-hidden rounded-md border border-v2-line">
-            <table className="w-full text-left text-sm">
-              <tbody>
-                {[
-                  ['Entry', formatInstrumentPrice(signal.entry_price, signal.ticker), 'text-v2-text'],
-                  ['Stop Loss', formatInstrumentPrice(signal.stop_loss, signal.ticker), 'text-v2-bearish'],
-                  ['Take Profit', formatInstrumentPrice(signal.take_profit, signal.ticker), 'text-v2-bullish'],
-                  ['ADX', signal.adx?.toFixed(1) ?? '—', 'text-v2-text'],
-                  ['RSI', signal.rsi?.toFixed(1) ?? '—', 'text-v2-text'],
-                ].map(([label, value, tone]) => (
-                  <tr key={label} className="border-b border-v2-line bg-v2-surface last:border-0">
-                    <td className="px-4 py-2.5 text-xs text-v2-text-muted">{label}</td>
-                    <td className={`v2-num px-4 py-2.5 text-right ${tone}`}>{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          {/* ── Why this signal exists ── */}
-          <section>
-            <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">
-              Why this signal was generated
-            </h2>
-            {Array.isArray(signal.reasons) && signal.reasons.length > 0 ? (
-              <ul className="space-y-2 rounded-md border border-v2-line bg-v2-surface p-4">
-                {signal.reasons.map((r) => (
-                  <li key={r.code} className="flex gap-2 text-sm text-v2-text-muted">
-                    <span className="text-v2-accent">•</span>
-                    <span>
-                      {r.label ?? REASON_SENTENCES[r.code] ?? r.code}
-                      <span className="ml-1.5 align-middle text-[10px] uppercase tracking-wide text-v2-text-faint">{r.code}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-v2-text-muted">
-                This signal predates structured reasoning capture (pre-v2) — no reasons were
-                recorded, and none are reconstructed after the fact.
-              </p>
-            )}
-            {(signal.market_condition || signal.session || signal.expected_duration) && (
-              <p className="mt-3 text-xs text-v2-text-faint">
-                Context at generation:{' '}
-                {[
-                  signal.market_condition && `${signal.market_condition} market`,
-                  signal.session && `${signal.session} session`,
-                  signal.expected_duration && `expected duration ${signal.expected_duration}`,
-                ].filter(Boolean).join(' · ')}
-                {signal.sl_reason && <> · stop placed {signal.sl_reason}</>}
-              </p>
-            )}
-          </section>
-
-          {/* ── Signal Journey ── */}
-          <section>
-            <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Signal Journey</h2>
-            <SignalJourney signal={signal} events={events} />
-          </section>
-
-          {/* ── Analysis: full article body, falling back to the excerpt for
-                 rows without content, then to an honest "none published" line
-                 (§0.2) — the box is never empty. ── */}
-          <section>
-            <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Analysis</h2>
-            <div className="rounded-md border border-v2-line bg-v2-surface p-4">
-              {analysisBody ? (
-                looksLikeHtml(analysisBody) ? (
-                  <div
-                    className="v2-prose"
-                    dangerouslySetInnerHTML={{ __html: sanitizeAnalysisHtml(analysisBody) }}
-                  />
-                ) : (
-                  <div className="v2-prose">
-                    {analysisBody.split(/\n{2,}/).map((para, i) => (
-                      <p key={i} className="whitespace-pre-line">{para}</p>
-                    ))}
-                  </div>
-                )
-              ) : analysisExcerpt ? (
-                <p className="text-sm leading-relaxed text-v2-text-muted">{analysisExcerpt}</p>
-              ) : (
-                <p className="text-sm text-v2-text-muted">No analysis was published for this signal.</p>
-              )}
-              <div className="mt-3 text-right">
-                <Link href={instrumentHref} className="text-xs text-v2-accent hover:underline">
-                  View the {displayFor(signal.ticker)} instrument page →
-                </Link>
+        <div className="flex min-w-0 gap-0">
+          {/* ── Main content ── */}
+          <div className="flex-1 min-w-0 space-y-8 px-6 py-6">
+            {/* 1. Header */}
+            <header className="space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="font-v2-display text-2xl font-bold text-v2-text">
+                  {displayFor(signal.ticker)}
+                </h1>
+                <span
+                  className={`rounded px-2 py-0.5 text-xs font-medium ${
+                    long ? 'bg-v2-bullish-soft text-v2-bullish' : 'bg-v2-bearish-soft text-v2-bearish'
+                  }`}
+                >
+                  {signal.direction} {long ? '▲' : '▼'}
+                </span>
+                <span className={`rounded border px-2 py-0.5 text-xs font-medium ${chip.cls}`}>
+                  {chip.text}
+                  {invalidation && <span className="font-normal"> — {invalidation}</span>}
+                </span>
               </div>
-            </div>
-          </section>
+              <p className="text-xs text-v2-text-muted">
+                Smart Asset Bot Signal · {fmtDateLong(signal.generated_at)} · <span className="v2-num">{fmtTimeUtc(signal.generated_at)}</span>
+              </p>
+            </header>
 
-          <RiskDisclaimer variant="full" />
+            {/* 2. Hero row */}
+            <section className="grid grid-cols-[auto_1fr] gap-4">
+              {/* TFS block */}
+              <div className="flex w-44 flex-col items-center justify-center rounded-md border border-v2-line bg-v2-surface px-4 py-5 text-center">
+                <div className="text-[10px] uppercase tracking-widest text-v2-text-faint">
+                  TradeFlow Score™
+                </div>
+                <div className="v2-num mt-1 text-5xl font-semibold text-v2-accent">
+                  {displayScore ?? '—'}
+                </div>
+                {(signal.confidence != null || tier) && (
+                  <div className="mt-1 text-[11px] text-v2-text-muted">
+                    {signal.confidence != null && <>Confidence <span className="v2-num text-v2-text">{signal.confidence}</span></>}
+                    {signal.confidence != null && tier && ' · '}
+                    {tier}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats block — two columns */}
+              <div className="rounded-md border border-v2-line bg-v2-surface px-4 py-3">
+                <div className="grid gap-x-6 md:grid-cols-2">
+                  <div>
+                    <StatRow label="Entry" value={formatInstrumentPrice(signal.entry_price, signal.ticker)} />
+                    <StatRow label="Stop Loss" value={formatInstrumentPrice(signal.stop_loss, signal.ticker)} tone="text-v2-bearish" />
+                    <StatRow label="Take Profit" value={formatInstrumentPrice(signal.take_profit, signal.ticker)} tone="text-v2-bullish" />
+                  </div>
+                  <div>
+                    <StatRow
+                      label="R:R Ratio"
+                      value={signal.rr_ratio != null ? `1 : ${signal.rr_ratio}` : '—'}
+                      tone="text-v2-accent"
+                    />
+                    <StatRow label="ADX" value={signal.adx != null ? Number(signal.adx).toFixed(1) : '—'} />
+                    <StatRow label="Entry Mode" value={signal.entry_mode ?? '—'} tone="text-v2-text-muted" />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. Chart */}
+            {tvSymbol && (
+              <section className="overflow-hidden rounded-md border border-v2-line bg-v2-surface">
+                <div className="flex items-center justify-between border-b border-v2-line px-4 py-2">
+                  <span className="text-xs font-medium text-v2-text">
+                    {displayFor(signal.ticker)} · 1H Chart
+                  </span>
+                  <span className="text-[10px] text-v2-text-faint">Powered by TradingView</span>
+                </div>
+                <TradingViewChart symbol={tvSymbol} interval="60" height={300} />
+              </section>
+            )}
+
+            {/* 4. Why this signal was generated */}
+            <section>
+              <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">
+                Why this signal was generated
+              </h2>
+              {Array.isArray(signal.reasons) && signal.reasons.length > 0 ? (
+                <ul className="space-y-2 rounded-md border border-v2-line bg-v2-surface p-4">
+                  {signal.reasons.map((r) => (
+                    <li key={r.code} className="flex items-start justify-between gap-3 text-sm text-v2-text-muted">
+                      <span className="flex min-w-0 gap-2">
+                        <span className="text-v2-accent">•</span>
+                        <span>{r.label ?? REASON_SENTENCES[r.code] ?? r.code}</span>
+                      </span>
+                      <span className="shrink-0 rounded border border-v2-line px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-v2-text-faint">
+                        {r.code}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-v2-text-muted">
+                  This signal predates structured reasoning capture (pre-v2) — no reasons were
+                  recorded, and none are reconstructed after the fact.
+                </p>
+              )}
+              {(signal.market_condition || signal.session || signal.expected_duration) && (
+                <p className="mt-3 text-xs text-v2-text-faint">
+                  Context at generation:{' '}
+                  {[
+                    signal.market_condition && `${signal.market_condition} market`,
+                    signal.session && `${signal.session} session`,
+                    signal.expected_duration && `expected duration ${signal.expected_duration}`,
+                  ].filter(Boolean).join(' · ')}
+                  {signal.sl_reason && <> · stop placed {signal.sl_reason}</>}
+                </p>
+              )}
+            </section>
+
+            {/* 5. Signal Journey */}
+            <section>
+              <h2 className="mb-3 font-v2-display text-base font-semibold text-v2-text">Signal Journey</h2>
+              <SignalJourney signal={signal} events={events} />
+            </section>
+
+            <RiskDisclaimer variant="compact" />
+          </div>
+
+          {/* ── Right sidebar ── */}
+          <aside className="w-56 shrink-0 space-y-4 border-l border-v2-line px-4 py-6">
+            <div>
+              <h2 className="mb-3 text-[10px] uppercase tracking-widest text-v2-text-faint">
+                Related signals
+              </h2>
+              {relatedSignals.length === 0 ? (
+                <p className="text-xs text-v2-text-faint">No other active signals right now.</p>
+              ) : (
+                <div className="space-y-3">
+                  {relatedSignals.map((s) => (
+                    <RelatedSignalCard key={s.signal_uid} signal={s} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-md border border-v2-line bg-v2-surface p-3">
+              <div className="text-[10px] uppercase tracking-widest text-v2-text-faint">Instrument page</div>
+              <div className="mt-1 font-v2-display text-sm font-semibold text-v2-text">{displayFor(signal.ticker)}</div>
+              {cls && <div className="text-[11px] text-v2-text-muted">{cls.name}</div>}
+              <Link href={instrumentHref} className="mt-2 inline-block text-[11px] text-v2-accent hover:underline">
+                View full instrument page →
+              </Link>
+            </div>
+          </aside>
         </div>
       </div>
     </>
