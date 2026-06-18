@@ -23,6 +23,14 @@ const STATUS_CHIPS = [
   { key: 'invalidated', label: 'Invalidated' },
 ];
 
+const SESSION_CHIPS = [
+  { key: null, label: 'All sessions' },
+  { key: 'london', label: 'London' },
+  { key: 'new_york', label: 'New York' },
+  { key: 'asian', label: 'Asian' },
+  { key: 'crypto', label: 'Crypto' },
+];
+
 function ChipRow({ chips, param, current, onSet }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -48,6 +56,7 @@ export default function ArchiveFilters() {
   const params = useSearchParams();
   const cls = params.get('class');
   const status = params.get('status');
+  const session = params.get('session');
 
   const set = (key, value) => {
     const next = new URLSearchParams(params.toString());
@@ -61,6 +70,7 @@ export default function ArchiveFilters() {
     <div className="space-y-2">
       <ChipRow chips={CLASS_CHIPS} param="class" current={cls} onSet={set} />
       <ChipRow chips={STATUS_CHIPS} param="status" current={status} onSet={set} />
+      <ChipRow chips={SESSION_CHIPS} param="session" current={session} onSet={set} />
     </div>
   );
 }

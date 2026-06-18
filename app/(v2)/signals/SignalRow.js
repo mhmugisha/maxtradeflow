@@ -14,9 +14,12 @@ export default function SignalRow({ row, extra = null, hidden = false }) {
         <Link href={row.href} className="block">{row.when}</Link>
       </td>
       <td className="px-3 py-2 font-medium text-v2-accent">
-        {extra ? (
+        {extra || row.sessionLabel ? (
           <div className="flex items-center gap-2">
             <Link href={row.href}>{row.instrument}</Link>
+            {row.sessionLabel && (
+              <span className={`rounded px-1.5 py-0.5 text-[10px] ${row.sessionCls}`}>{row.sessionLabel}</span>
+            )}
             {extra}
           </div>
         ) : (

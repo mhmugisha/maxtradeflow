@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { displayFor, formatInstrumentPrice, instrumentsByClass } from '@/lib/instruments';
-import { getSignalsPage, getPlatformStatsGate, getSignalCounts } from '@/lib/v2-data';
+import { getSignalsPage, getPlatformStatsGate, getSignalCounts, ARCHIVE_SESSION_PROFILES } from '@/lib/v2-data';
 import Breadcrumb from '@/components/v2/Breadcrumb';
 import MarketsSidebar from '@/components/v2/MarketsSidebar';
 import RiskDisclaimer from '@/components/v2/RiskDisclaimer';
@@ -19,6 +19,17 @@ export const metadata = {
 };
 
 const PER_PAGE = 20;
+
+// session_profile → human label. 'all' (legacy multi-session bot) renders no
+// badge — historical signals predate session attribution, so an "all" pill
+// would just be noise on every old row.
+const SESSION_LABEL = {
+  london: 'London',
+  new_york: 'New York',
+  asian: 'Asian',
+  crypto: 'Crypto',
+  all: null,
+};
 
 const STATUS_BADGE = {
   GENERATED: { label: 'AWAITING', cls: 'border border-v2-line text-v2-text-muted' },
@@ -39,6 +50,9 @@ const fmtWhen = (iso) => {
 /** Precomputed display strings for one row (SignalRow is purely presentational). */
 function toDisplayRow(s) {
   const badge = STATUS_BADGE[s.status] ?? STATUS_BADGE.GENERATED;
+  const sessionLabel = s.session_profile != null
+    ? (s.session_profile in SESSION_LABEL ? SESSION_LABEL[s.session_profile] : s.session_profile)
+    : null;
   return {
     href: `/signals/${s.signal_uid}`,
     when: fmtWhen(s.generated_at),
@@ -50,6 +64,8 @@ function toDisplayRow(s) {
     entry: formatInstrumentPrice(s.entry_price, s.ticker),
     badgeLabel: badge.label,
     badgeCls: badge.cls,
+    sessionLabel,
+    sessionCls: 'border border-v2-line text-v2-text-muted',
     r: s.realizedR == null ? '—' : `${s.realizedR > 0 ? '+' : ''}${s.realizedR}R`,
     rCls: s.realizedR == null ? 'text-v2-text-faint' : s.realizedR >= 0 ? 'text-v2-bullish' : 'text-v2-bearish',
   };
@@ -92,6 +108,7 @@ export default async function SignalsArchivePage({ searchParams }) {
   const page = Math.max(1, parseInt(sp.page ?? '1', 10) || 1);
   const assetClass = ['forex', 'indices', 'commodities', 'crypto'].includes(sp.class) ? sp.class : null;
   const status = ['active', 'tp', 'sl', 'expired', 'invalidated'].includes(sp.status) ? sp.status : null;
+  const sessionProfile = ARCHIVE_SESSION_PROFILES.includes(sp.session) ? sp.session : null;
 
   const [{ rows, total }, platformGate, counts] = await Promise.all([
     getSignalsPage({
@@ -99,6 +116,7 @@ export default async function SignalsArchivePage({ searchParams }) {
       perPage: PER_PAGE,
       assetClass,
       status,
+      sessionProfile,
       classTickers: assetClass ? instrumentsByClass(assetClass).map((i) => i.symbol) : null,
     }),
     getPlatformStatsGate(),
@@ -113,6 +131,7 @@ export default async function SignalsArchivePage({ searchParams }) {
     const q = new URLSearchParams();
     if (assetClass) q.set('class', assetClass);
     if (status) q.set('status', status);
+    if (sessionProfile) q.set('session', sessionProfile);
     if (p > 1) q.set('page', String(p));
     return `/signals${q.size ? `?${q}` : ''}`;
   };
