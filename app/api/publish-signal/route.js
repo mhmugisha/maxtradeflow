@@ -132,6 +132,7 @@ async function handleV2(sql, signal) {
     adx, rsi, entry_mode, sl_reason, reasons, market_condition, session,
     expected_duration, generated_at,
   } = signal;
+  const sessionProfile = signal.session_profile ?? 'all';
 
   if (!signal_uid || !ticker || !direction) {
     return NextResponse.json(
@@ -150,13 +151,13 @@ async function handleV2(sql, signal) {
       entry_price, stop_loss, take_profit, rr_ratio, score,
       tradeflow_score, tfs_version, confidence, adx, rsi,
       entry_mode, sl_reason, reasons, market_condition, session,
-      expected_duration, generated_at, status
+      expected_duration, generated_at, status, session_profile
     ) VALUES (
       ${signal_uid}, 2, ${ticker}, ${assetClass}, ${direction},
       ${entry_price ?? null}, ${stop_loss ?? null}, ${take_profit ?? null}, ${rr_ratio ?? null}, ${score ?? null},
       ${tradeflow_score ?? null}, ${tfs_version ?? null}, ${confidence ?? null}, ${adx ?? null}, ${rsi ?? null},
       ${entry_mode ?? null}, ${sl_reason ?? null}, ${JSON.stringify(reasons ?? null)}, ${market_condition ?? null}, ${session ?? null},
-      ${expected_duration ?? null}, ${generated_at ?? null}, 'GENERATED'
+      ${expected_duration ?? null}, ${generated_at ?? null}, 'GENERATED', ${sessionProfile}
     )
     ON CONFLICT (signal_uid) DO NOTHING
   `;
